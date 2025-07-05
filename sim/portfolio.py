@@ -55,7 +55,12 @@ class Portfolio:
         data = []
         for prj in self.projects:
             data.append({k: v for k, v in prj.__dict__.items() if isinstance(v, (str, int, float, bool))})
-        return pd.DataFrame(data)
+        df = pd.DataFrame(data)
+        # round numeric columns to 2 decimal places but retain all columns
+        numeric_cols = df.select_dtypes(include=["number"]).columns
+        df[numeric_cols] = df[numeric_cols].round(2)
+
+        return df
 
     def run(self, until: int):
         """Run the simulation until a specific time."""

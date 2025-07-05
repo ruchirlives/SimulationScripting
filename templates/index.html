@@ -1,562 +1,599 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Simulation Backend - YAML Upload</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?minify=true"></script>
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'spin': 'spin 1s linear infinite',
-                    }
-                }
-            }
-        }
+      tailwind.config = {
+        theme: {
+          extend: {
+            animation: {
+              spin: "spin 1s linear infinite",
+            },
+          },
+        },
+      };
     </script>
     <style>
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
         }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
-</head>
-<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 min-h-screen p-5 font-sans">
+  </head>
+  <body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 min-h-screen p-5 font-sans">
     <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
-        <div class="bg-gradient-to-r from-slate-700 to-slate-600 text-white p-8 text-center">
-            <h1 class="text-4xl font-bold mb-3">🚀 Simulation Backend</h1>
-            <p class="text-lg opacity-90">Upload YAML files to run portfolio simulations</p>
-        </div>
+      <div class="bg-gradient-to-r from-slate-700 to-slate-600 text-white p-8 text-center">
+        <h1 class="text-4xl font-bold mb-3">🚀 Simulation Backend</h1>
+        <p class="text-lg opacity-90">Upload YAML files to run portfolio simulations</p>
+      </div>
 
-        <div class="p-10">
-            <form id="simulationForm" enctype="multipart/form-data">
-                <!-- Main Simulation File -->
-                <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
-                    <h3 class="text-slate-700 mb-4 text-xl font-semibold">📊 Main Simulation Configuration</h3>
-                    <div class="mb-5">
-                        <label for="yaml_file" class="block mb-2 font-semibold text-slate-600">Simulation YAML File <span class="text-red-500">*</span></label>
-                        <div class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50" data-target="yaml_file">
-                            <div class="text-2xl text-indigo-500 mb-3">📁</div>
-                            <p class="text-gray-600">Click to select or drag & drop your simulation YAML file</p>
-                            <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required class="hidden">
-                            <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="yaml_file_info"></div>
-                            <button type="button" class="absolute top-2 right-2 text-xs text-gray-500 hover:text-red-500 clear-file px-2 py-1 rounded hover:bg-red-50" data-target="yaml_file">Clear</button>
-                        </div>
-                    </div>
-                </div>
+      <div class="p-10">
+        <form id="simulationForm" enctype="multipart/form-data">
+          <!-- Main Simulation File -->
+          <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 class="text-slate-700 mb-4 text-xl font-semibold">📊 Main Simulation Configuration</h3>
+            <div class="mb-5">
+              <label for="yaml_file" class="block mb-2 font-semibold text-slate-600">Simulation YAML File <span class="text-red-500">*</span></label>
+              <div
+                class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50"
+                data-target="yaml_file"
+              >
+                <div class="text-2xl text-indigo-500 mb-3">📁</div>
+                <p class="text-gray-600">Click to select or drag & drop your simulation YAML file</p>
+                <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required class="hidden" />
+                <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="yaml_file_info"></div>
+              </div>
+            </div>
+          </div>
 
-                <!-- Optional Data Files -->
-                <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
-                    <h3 class="text-slate-700 mb-4 text-xl font-semibold">📋 Additional Data Files <span class="text-gray-500 text-sm font-normal">(Optional)</span></h3>
-                    
-                    <div class="mb-5">
-                        <label for="fcrdata_file" class="block mb-2 font-semibold text-slate-600">FCR Data YAML File</label>
-                        <div class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50" data-target="fcrdata_file">
-                            <div class="text-2xl text-indigo-500 mb-3">📄</div>
-                            <p class="text-gray-600">Click to select or drag & drop FCR data YAML file</p>
-                            <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" class="hidden">
-                            <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="fcrdata_file_info"></div>
-                            <button type="button" class="absolute top-2 right-2 text-xs text-gray-500 hover:text-red-500 clear-file px-2 py-1 rounded hover:bg-red-50" data-target="fcrdata_file">Clear</button>
-                        </div>
-                    </div>
+          <!-- Optional Data Files -->
+          <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 class="text-slate-700 mb-4 text-xl font-semibold">
+              📋 Additional Data Files <span class="text-gray-500 text-sm font-normal">(Optional)</span>
+            </h3>
 
-                    <div class="mb-5">
-                        <label for="supportdata_file" class="block mb-2 font-semibold text-slate-600">Support Data YAML File</label>
-                        <div class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50" data-target="supportdata_file">
-                            <div class="text-2xl text-indigo-500 mb-3">📄</div>
-                            <p class="text-gray-600">Click to select or drag & drop support data YAML file</p>
-                            <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" class="hidden">
-                            <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="supportdata_file_info"></div>
-                            <button type="button" class="absolute top-2 right-2 text-xs text-gray-500 hover:text-red-500 clear-file px-2 py-1 rounded hover:bg-red-50" data-target="supportdata_file">Clear</button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Simulation Parameters -->
-                <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
-                    <h3 class="text-slate-700 mb-4 text-xl font-semibold">⚙️ Simulation Parameters</h3>
-                    <div class="mb-5">
-                        <label for="steps" class="block mb-2 font-semibold text-slate-600">Number of Steps</label>
-                        <input type="number" id="steps" name="steps" value="12" min="1" max="120" 
-                               placeholder="Enter number of simulation steps"
-                               class="w-full p-3 border-2 border-gray-300 rounded-md text-sm transition-colors duration-300 focus:outline-none focus:border-indigo-500">
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-lg text-lg font-semibold transition-transform duration-200 hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none mt-5" id="submitBtn">
-                    🚀 Run Simulation
-                </button>
-            </form>
-
-            <div class="response-area mt-8 p-5 bg-gray-50 rounded-lg hidden" id="responseArea">
-                <h3 class="text-xl font-semibold mb-4">📈 Simulation Results</h3>
-                <div id="loadingIndicator" class="text-center p-5 hidden">
-                    <div class="w-8 h-8 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
-                    <p class="text-gray-600">Running simulation...</p>
-                </div>
-                
-                <!-- Tab Navigation -->
-                <div class="tab-container mt-5 hidden" id="tabContainer">
-                    <div class="flex border-b-2 border-gray-200 mb-5 gap-3 flex-wrap">
-                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500 active border-b-indigo-500 text-indigo-500 bg-blue-50" onclick="showTab('budget-table')">📊 Budget Table</button>
-                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500" onclick="showTab('projects-table')">🏗️ Projects</button>
-                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500" onclick="showTab('transactions-table')">💰 Transactions</button>
-                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500" onclick="showTab('raw-json')">📄 Raw JSON</button>
-                    </div>
-                    
-                    <!-- Budget Table Tab -->
-                    <div id="budget-table" class="tab-content block">
-                        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                            <table id="budgetTable" class="w-full border-collapse text-sm">
-                                <thead>
-                                    <tr id="budgetTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
-                                </thead>
-                                <tbody id="budgetTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <!-- Projects Table Tab -->
-                    <div id="projects-table" class="tab-content hidden">
-                        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                            <table id="projectsTable" class="w-full border-collapse text-sm">
-                                <thead>
-                                    <tr id="projectsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
-                                </thead>
-                                <tbody id="projectsTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <!-- Transactions Table Tab -->
-                    <div id="transactions-table" class="tab-content hidden">
-                        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-                            <table id="transactionsTable" class="w-full border-collapse text-sm">
-                                <thead>
-                                    <tr id="transactionsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
-                                </thead>
-                                <tbody id="transactionsTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                    
-                    <!-- Raw JSON Tab -->
-                    <div id="raw-json" class="tab-content hidden">
-                        <pre id="responseContent" class="bg-slate-800 text-gray-200 p-4 rounded-md overflow-x-auto text-sm"></pre>
-                    </div>
-                </div>
+            <div class="mb-5">
+              <label for="fcrdata_file" class="block mb-2 font-semibold text-slate-600">FCR Data YAML File</label>
+              <div
+                class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50"
+                data-target="fcrdata_file"
+              >
+                <div class="text-2xl text-indigo-500 mb-3">📄</div>
+                <p class="text-gray-600">Click to select or drag & drop FCR data YAML file</p>
+                <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" class="hidden" />
+                <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="fcrdata_file_info"></div>
+              </div>
             </div>
 
-            <div class="text-center mt-8">
-                <a href="/simulate/example" class="inline-block mt-4 text-indigo-500 no-underline font-medium hover:underline" target="_blank">
-                    📖 View Example YAML Configuration
-                </a>
+            <div class="mb-5">
+              <label for="supportdata_file" class="block mb-2 font-semibold text-slate-600">Support Data YAML File</label>
+              <div
+                class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50"
+                data-target="supportdata_file"
+              >
+                <div class="text-2xl text-indigo-500 mb-3">📄</div>
+                <p class="text-gray-600">Click to select or drag & drop support data YAML file</p>
+                <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" class="hidden" />
+                <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="supportdata_file_info"></div>
+              </div>
             </div>
+          </div>
+
+          <!-- Simulation Parameters -->
+          <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
+            <h3 class="text-slate-700 mb-4 text-xl font-semibold">⚙️ Simulation Parameters</h3>
+            <div class="mb-5">
+              <label for="steps" class="block mb-2 font-semibold text-slate-600">Number of Steps</label>
+              <input
+                type="number"
+                id="steps"
+                name="steps"
+                value="12"
+                min="1"
+                max="120"
+                placeholder="Enter number of simulation steps"
+                class="w-full p-3 border-2 border-gray-300 rounded-md text-sm transition-colors duration-300 focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-lg text-lg font-semibold transition-transform duration-200 hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none mt-5"
+            id="submitBtn"
+          >
+            🚀 Run Simulation
+          </button>
+        </form>
+
+        <div class="response-area mt-8 p-5 bg-gray-50 rounded-lg hidden" id="responseArea">
+          <h3 class="text-xl font-semibold mb-4">📈 Simulation Results</h3>
+          <div id="loadingIndicator" class="text-center p-5 hidden">
+            <div class="w-8 h-8 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-600">Running simulation...</p>
+          </div>
+
+          <!-- Tab Navigation -->
+          <div class="tab-container mt-5 hidden" id="tabContainer">
+            <div class="flex border-b-2 border-gray-200 mb-5 gap-3 flex-wrap">
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500 active border-b-indigo-500 text-indigo-500 bg-blue-50"
+                onclick="showTab('budget-table')"
+              >
+                📊 Budget Table
+              </button>
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500"
+                onclick="showTab('projects-table')"
+              >
+                🏗️ Projects
+              </button>
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500"
+                onclick="showTab('transactions-table')"
+              >
+                💰 Transactions
+              </button>
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500"
+                onclick="showTab('raw-json')"
+              >
+                📄 Raw JSON
+              </button>
+            </div>
+
+            <!-- Budget Table Tab -->
+            <div id="budget-table" class="tab-content block">
+              <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table id="budgetTable" class="w-full border-collapse text-sm">
+                  <thead>
+                    <tr id="budgetTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
+                  </thead>
+                  <tbody id="budgetTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Projects Table Tab -->
+            <div id="projects-table" class="tab-content hidden">
+              <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table id="projectsTable" class="w-full border-collapse text-sm">
+                  <thead>
+                    <tr id="projectsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
+                  </thead>
+                  <tbody id="projectsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Transactions Table Tab -->
+            <div id="transactions-table" class="tab-content hidden">
+              <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table id="transactionsTable" class="w-full border-collapse text-sm">
+                  <thead>
+                    <tr id="transactionsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
+                  </thead>
+                  <tbody id="transactionsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Raw JSON Tab -->
+            <div id="raw-json" class="tab-content hidden">
+              <pre id="responseContent" class="bg-slate-800 text-gray-200 p-4 rounded-md overflow-x-auto text-sm"></pre>
+            </div>
+          </div>
         </div>
+
+        <div class="text-center mt-8">
+          <a href="/simulate/example" class="inline-block mt-4 text-indigo-500 no-underline font-medium hover:underline" target="_blank">
+            📖 View Example YAML Configuration
+          </a>
+        </div>
+      </div>
     </div>
 
     <script>
-        // File upload handling
-        document.querySelectorAll('.file-upload-area').forEach(area => {
-            const input = area.querySelector('input[type="file"]');
-            const info = area.querySelector('.file-info');
-            
-            area.addEventListener('click', () => input.click());
-            
-            // Drag and drop
-            area.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                area.classList.add('border-indigo-500', 'bg-indigo-50');
-            });
-            
-            area.addEventListener('dragleave', () => {
-                area.classList.remove('border-indigo-500', 'bg-indigo-50');
-            });
-            
-            area.addEventListener('drop', (e) => {
-                e.preventDefault();
-                area.classList.remove('border-indigo-500', 'bg-indigo-50');
-                
-                const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    input.files = files;
-                    updateFileInfo(input, info);
-                }
-            });
-            
-            input.addEventListener('change', () => {
-                updateFileInfo(input, info);
-            });
-        });
+          // File upload handling
+          document.querySelectorAll('.file-upload-area').forEach(area => {
+              const input = area.querySelector('input[type="file"]');
+              const info = area.querySelector('.file-info');
 
-            <div class="mt-2 flex justify-end">
-                <button type="button" class="text-xs text-gray-500 hover:text-red-500 clear-file" data-target="${id}">Clear</button>
-            </div>
-        </div>
-    </div>
+              area.addEventListener('click', () => input.click());
 
-        // Add clear file functionality
-        document.querySelectorAll('.clear-file').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const targetId = btn.getAttribute('data-target');
-                const area = document.querySelector(`.file-upload-area[data-target="${targetId}"]`);
-                const input = document.getElementById(targetId);
-                const info = document.getElementById(targetId + '_info');
-                
-                // Clear file input and localStorage
-                input.value = '';
-                localStorage.removeItem('file_' + targetId);
-                info.classList.add('hidden');
-                area.classList.remove('border-indigo-500', 'bg-indigo-50');
-            });
-        });
+              // Drag and drop
+              area.addEventListener('dragover', (e) => {
+                  e.preventDefault();
+                  area.classList.add('border-indigo-500', 'bg-indigo-50');
+              });
 
-        // Restore persisted files on load
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("Loading saved files from localStorage");
-            ['yaml_file', 'fcrdata_file', 'supportdata_file'].forEach(id => {
-                try {
-                    const stored = localStorage.getItem('file_' + id);
-                    if (stored) {
-                        const data = JSON.parse(stored);
-                        console.log(`Found stored file: ${id}, ${data.name}, ${data.content ? data.content.length + ' bytes' : 'missing content'}`);
-                        const area = document.querySelector(`.file-upload-area[data-target="${id}"]`);
-                        const info = document.getElementById(id + '_info');
-                        info.textContent = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB)`;
-                        info.classList.remove('hidden');
-                        area.classList.add('border-indigo-500', 'bg-indigo-50');
-                    }
-                } catch (error) {
-                    console.error(`Error loading ${id} from localStorage:`, error);
-                }
-            });
-            
-            // Add event listeners for clear buttons
-            document.querySelectorAll('.clear-file').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const targetId = btn.getAttribute('data-target');
-                    const area = document.querySelector(`.file-upload-area[data-target="${targetId}"]`);
-                    const info = document.getElementById(targetId + '_info');
-                    
-                    console.log(`Clearing file: ${targetId}`);
-                    localStorage.removeItem('file_' + targetId);
-                    info.classList.add('hidden');
-                    area.classList.remove('border-indigo-500', 'bg-indigo-50');
-                });
-            });
-        });
+              area.addEventListener('dragleave', () => {
+                  area.classList.remove('border-indigo-500', 'bg-indigo-50');
+              });
 
-        function updateFileInfo(input, info) {
-            if (input.files.length > 0) {
-                const file = input.files[0];
-                info.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-                info.classList.remove('hidden');
-                // Persist file content
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    try {
-                        const content = event.target.result;
-                        const payload = { name: file.name, size: file.size, type: file.type, content };
-                        localStorage.setItem('file_' + input.id, JSON.stringify(payload));
-                        console.log(`File ${file.name} saved to localStorage (${content.length} bytes)`);
-                    } catch (error) {
-                        console.error("Error saving file to localStorage:", error);
-                    }
-                };
-                reader.readAsText(file);
-            } else {
-                info.classList.add('hidden');
-            }
-        }
+              area.addEventListener('drop', (e) => {
+                  e.preventDefault();
+                  area.classList.remove('border-indigo-500', 'bg-indigo-50');
 
-        // Tab handling
-        function showTab(tabId) {
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-                content.classList.remove('block');
-            });
-            
-            // Remove active class from all tab buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active', 'border-b-indigo-500', 'text-indigo-500', 'bg-blue-50');
-                btn.classList.add('border-b-transparent', 'text-gray-600');
-            });
-            
-            // Show selected tab content
-            document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById(tabId).classList.add('block');
-            
-            // Find and activate the correct button
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => {
-                if (btn.getAttribute('onclick').includes(tabId)) {
-                    btn.classList.add('active', 'border-b-indigo-500', 'text-indigo-500', 'bg-blue-50');
-                    btn.classList.remove('border-b-transparent', 'text-gray-600');
-                }
-            });
-        }
+                  const files = e.dataTransfer.files;
+                  if (files.length > 0) {
+                      input.files = files;
+                      updateFileInfo(input, info);
+                  }
+              });
 
-        // Table rendering functions
-        function formatCurrency(value) {
-            if (typeof value === 'number') {
-                return new Intl.NumberFormat('en-GB', {
-                    style: 'currency',
-                    currency: 'GBP',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                }).format(value);
-            }
-            return value;
-        }
+              input.addEventListener('change', () => {
+                  updateFileInfo(input, info);
+              });
+          });
 
-        function formatNumber(value) {
-            if (typeof value === 'number') {
-                return new Intl.NumberFormat('en-GB', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }).format(value);
-            }
-            return value;
-        }
+          // Add clear file functionality
+          document.querySelectorAll('.clear-file').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  const targetId = btn.getAttribute('data-target');
+                  const area = document.querySelector(`.file-upload-area[data-target="${targetId}"]`);
+                  const input = document.getElementById(targetId);
+                  const info = document.getElementById(targetId + '_info');
 
-        function renderTable(tableId, data, formatters = {}) {
-            const table = document.getElementById(tableId);
-            const headerRow = document.getElementById(tableId + 'Header');
-            const tbody = document.getElementById(tableId + 'Body');
-            
-            if (!data || data.length === 0) {
-                headerRow.innerHTML = '<th class="p-3 text-left font-semibold border-b-2 border-gray-300">No data available</th>';
-                tbody.innerHTML = '';
-                return;
-            }
-            
-            // Get all unique keys from the data
-            let keys = [...new Set(data.flatMap(Object.keys))];
-            // Reorder columns for budget table: description, item, type first, then step columns
-            if (tableId === 'budgetTable') {
-                const fixed = ['description', 'item', 'type'];
-                const stepCols = keys.filter(k => !fixed.includes(k)).sort((a, b) => {
-                    const na = parseInt((a.match(/\d+/) || [])[0]);
-                    const nb = parseInt((b.match(/\d+/) || [])[0]);
-                    return (isNaN(na) ? 0 : na) - (isNaN(nb) ? 0 : nb);
-                });
-                keys = [...fixed, ...stepCols];
-            }
-            
-            // Create header
-            headerRow.innerHTML = keys.map(key => 
-                `<th class="p-3 text-left font-semibold border-b-2 border-gray-300">${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}</th>`
-            ).join('');
-            
-            // Create rows
-            tbody.innerHTML = data.map(row => {
-                return '<tr class="even:bg-gray-50 hover:bg-blue-50">' + keys.map(key => {
-                    let value = row[key] || '';
-                    let cellClass = 'p-3 border-b border-gray-100 align-top';
-                    let originalValue = value; // Keep original for comparison
-                    
-                    // Apply formatters
-                    if (formatters[key]) {
-                        value = formatters[key](value);
-                        cellClass += ' text-right font-mono font-medium';
-                        if (key.includes('budget') || key.includes('amount') || key.includes('cost')) {
-                            cellClass += ' text-green-600';
-                            // Check original numeric value, not formatted string
-                            if (typeof originalValue === 'number' && originalValue < 0) {
-                                cellClass += ' text-red-600';
-                            }
-                        }
-                    }
-                    
-                    return `<td class="${cellClass}">${value}</td>`;
-                }).join('') + '</tr>';
-            }).join('');
-        }
+                  // Clear file input and localStorage
+                  input.value = '';
+                  localStorage.removeItem('file_' + targetId);
+                  info.classList.add('hidden');
+                  area.classList.remove('border-indigo-500', 'bg-indigo-50');
+              });
+          });
 
-        function createPivotTable(budgetData) {
-            if (!budgetData || budgetData.length === 0) return [];
-            
-            // Group by item
-            const grouped = {};
-            budgetData.forEach(row => {
-                const item = row.item || 'Unknown';
-                if (!grouped[item]) {
-                    grouped[item] = {
-                        item: item,
-                        description: row.description || '',
-                        type: row.type || ''
-                    };
-                }
-                
-                // Add step-based budget columns
-                const step = `Step ${row.step || 0}`;
-                grouped[item][step] = (grouped[item][step] || 0) + (row.budget || 0);
-            });
-            
-            return Object.values(grouped);
-        }
+          // Restore persisted files on load
+          document.addEventListener('DOMContentLoaded', () => {
+              console.log("Loading saved files from localStorage");
+              ['yaml_file', 'fcrdata_file', 'supportdata_file'].forEach(id => {
+                  try {
+                      const stored = localStorage.getItem('file_' + id);
+                      if (stored) {
+                          const data = JSON.parse(stored);
+                          console.log(`Found stored file: ${id}, ${data.name}, ${data.content ? data.content.length + ' bytes' : 'missing content'}`);
+                          const area = document.querySelector(`.file-upload-area[data-target="${id}"]`);
+                          const info = document.getElementById(id + '_info');
+                          info.textContent = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB)`;
+                          info.classList.remove('hidden');
+                          area.classList.add('border-indigo-500', 'bg-indigo-50');
+                      }
+                  } catch (error) {
+                      console.error(`Error loading ${id} from localStorage:`, error);
+                  }
+              });
 
-        // Form submission
-        document.getElementById('simulationForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            // Build FormData with persisted files
-            const formData = new FormData();
-            let hasRequiredFiles = false;
-            
-            try {
-                // Check for main simulation file (required)
-                const mainYamlStored = localStorage.getItem('file_yaml_file');
-                if (mainYamlStored) {
-                    const mainFile = JSON.parse(mainYamlStored);
-                    if (mainFile && mainFile.content) {
-                        console.log(`Using stored yaml_file: ${mainFile.name} (${mainFile.content.length} bytes)`);
-                        formData.append('yaml_file', new File([mainFile.content], mainFile.name, { type: mainFile.type }));
-                        hasRequiredFiles = true;
-                    }
-                }
-                
-                // Only proceed if we have the required yaml file
-                if (!hasRequiredFiles) {
-                    alert("Please upload a simulation YAML file");
-                    throw new Error("Missing required simulation YAML file");
-                }
-                
-                // Add optional files
-                ['fcrdata_file', 'supportdata_file'].forEach(id => {
-                    const stored = localStorage.getItem('file_' + id);
-                    if (stored) {
-                        const f = JSON.parse(stored);
-                        if (f && f.content) {
-                            console.log(`Using stored ${id}: ${f.name} (${f.content.length} bytes)`);
-                            formData.append(id, new File([f.content], f.name, { type: f.type }));
-                        }
-                    }
-                });
-                
-                // Append steps
-                formData.append('steps', document.getElementById('steps').value);
-            } catch (error) {
-                console.error("Error preparing form data:", error);
-                submitBtn.disabled = false;
-                submitBtn.textContent = '🚀 Run Simulation';
-                return; // Stop form submission
-            }
-            
-            const submitBtn = document.getElementById('submitBtn');
-            const responseArea = document.getElementById('responseArea');
-            const tabContainer = document.getElementById('tabContainer');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            const responseContent = document.getElementById('responseContent');
-            
-            // Show loading state
-            submitBtn.disabled = true;
-            submitBtn.textContent = '⏳ Running...';
-            responseArea.classList.remove('hidden');
-            responseArea.classList.add('block');
-            tabContainer.classList.add('hidden');
-            loadingIndicator.classList.remove('hidden');
-            
-            try {
-                const response = await fetch('/simulate', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    // Show tab container
-                    tabContainer.classList.remove('hidden');
-                    
-                    // Render tables
-                    const budgetFormatters = {
-                        budget: formatCurrency,
-                        step: formatNumber
-                    };
-                    
-                    const projectFormatters = {
-                        budget: formatCurrency,
-                        cost: formatCurrency,
-                        income: formatCurrency,
-                        term: formatNumber
-                    };
-                    
-                    const transactionFormatters = {
-                        amount: formatCurrency,
-                        balance: formatCurrency,
-                        date: formatNumber
-                    };
-                    
-                    // Use pivot data if available, otherwise create it from budget data
-                    let budgetTableData;
-                    if (result.budget_pivot && result.budget_pivot.length > 0) {
-                        budgetTableData = result.budget_pivot;
-                        
-                        // Create formatters for step columns
-                        const pivotFormatters = {};
-                        if (budgetTableData.length > 0) {
-                            Object.keys(budgetTableData[0]).forEach(key => {
-                                if (key.match(/^\d+$/) || key.includes('Step')) {
-                                    pivotFormatters[key] = formatCurrency;
-                                }
-                            });
-                        }
-                        
-                        renderTable('budgetTable', budgetTableData, pivotFormatters);
-                    } else {
-                        // Fallback: create pivot table from budget data
-                        budgetTableData = createPivotTable(result.budget || []);
-                        
-                        // Find all step columns for pivot table
-                        const stepColumns = {};
-                        (result.budget || []).forEach(row => {
-                            const step = `Step ${row.step || 0}`;
-                            stepColumns[step] = formatCurrency;
-                        });
-                        
-                        const pivotFormatters = {
-                            ...stepColumns
-                        };
-                        
-                        renderTable('budgetTable', budgetTableData, pivotFormatters);
-                    }
-                    
-                    renderTable('projectsTable', result.projects || [], projectFormatters);
-                    renderTable('transactionsTable', result.transactions || [], transactionFormatters);
-                    
-                    // Show raw JSON
-                    responseContent.textContent = JSON.stringify(result, null, 2);
-                    responseContent.classList.remove('text-red-500');
-                    responseContent.classList.add('text-green-600');
-                    
-                } else {
-                    // Show error in raw JSON tab
-                    tabContainer.classList.remove('hidden');
-                    showTab('raw-json');
-                    responseContent.textContent = JSON.stringify(result, null, 2);
-                    responseContent.classList.remove('text-green-600');
-                    responseContent.classList.add('text-red-500');
-                }
-                
-            } catch (error) {
-                tabContainer.classList.remove('hidden');
-                showTab('raw-json');
-                responseContent.textContent = `Error: ${error.message}`;
-                responseContent.classList.remove('text-green-600');
-                responseContent.classList.add('text-red-500');
-            } finally {
-                // Reset button state
-                submitBtn.disabled = false;
-                submitBtn.textContent = '🚀 Run Simulation';
-                loadingIndicator.classList.add('hidden');
-            }
-        });
+              // Add event listeners for clear buttons
+              document.querySelectorAll('.clear-file').forEach(btn => {
+                  btn.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      const targetId = btn.getAttribute('data-target');
+                      const area = document.querySelector(`.file-upload-area[data-target="${targetId}"]`);
+                      const info = document.getElementById(targetId + '_info');
+
+                      console.log(`Clearing file: ${targetId}`);
+                      localStorage.removeItem('file_' + targetId);
+                      info.classList.add('hidden');
+                      area.classList.remove('border-indigo-500', 'bg-indigo-50');
+                  });
+              });
+          });
+
+          function updateFileInfo(input, info) {
+              if (input.files.length > 0) {
+                  const file = input.files[0];
+                  info.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                  info.classList.remove('hidden');
+                  // Persist file content
+                  const reader = new FileReader();
+                  reader.onload = (event) => {
+                      try {
+                          const content = event.target.result;
+                          const payload = { name: file.name, size: file.size, type: file.type, content };
+                          localStorage.setItem('file_' + input.id, JSON.stringify(payload));
+                          console.log(`File ${file.name} saved to localStorage (${content.length} bytes)`);
+                      } catch (error) {
+                          console.error("Error saving file to localStorage:", error);
+                      }
+                  };
+                  reader.readAsText(file);
+              } else {
+                  info.classList.add('hidden');
+              }
+          }
+
+          // Tab handling
+          function showTab(tabId) {
+              // Hide all tab contents
+              document.querySelectorAll('.tab-content').forEach(content => {
+                  content.classList.add('hidden');
+                  content.classList.remove('block');
+              });
+
+              // Remove active class from all tab buttons
+              document.querySelectorAll('.tab-btn').forEach(btn => {
+                  btn.classList.remove('active', 'border-b-indigo-500', 'text-indigo-500', 'bg-blue-50');
+                  btn.classList.add('border-b-transparent', 'text-gray-600');
+              });
+
+              // Show selected tab content
+              document.getElementById(tabId).classList.remove('hidden');
+              document.getElementById(tabId).classList.add('block');
+
+              // Find and activate the correct button
+              const buttons = document.querySelectorAll('.tab-btn');
+              buttons.forEach(btn => {
+                  if (btn.getAttribute('onclick').includes(tabId)) {
+                      btn.classList.add('active', 'border-b-indigo-500', 'text-indigo-500', 'bg-blue-50');
+                      btn.classList.remove('border-b-transparent', 'text-gray-600');
+                  }
+              });
+          }
+
+          // Table rendering functions
+          function formatCurrency(value) {
+              if (typeof value === 'number') {
+                  return new Intl.NumberFormat('en-GB', {
+                      style: 'currency',
+                      currency: 'GBP',
+                      minimumFractionDigits: 0,
+                      maximumFractionDigits: 0
+                  }).format(value);
+              }
+              return value;
+          }
+
+          function formatNumber(value) {
+              if (typeof value === 'number') {
+                  return new Intl.NumberFormat('en-GB', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                  }).format(value);
+              }
+              return value;
+          }
+
+          function renderTable(tableId, data, formatters = {}) {
+              const table = document.getElementById(tableId);
+              const headerRow = document.getElementById(tableId + 'Header');
+              const tbody = document.getElementById(tableId + 'Body');
+
+              if (!data || data.length === 0) {
+                  headerRow.innerHTML = '<th class="p-3 text-left font-semibold border-b-2 border-gray-300">No data available</th>';
+                  tbody.innerHTML = '';
+                  return;
+              }
+
+              // Get all unique keys from the data
+              let keys = [...new Set(data.flatMap(Object.keys))];
+              // Reorder columns for budget table: description, item, type first, then step columns
+              if (tableId === 'budgetTable') {
+                  const fixed = ['item','description', 'type'];
+                  const stepCols = keys.filter(k => !fixed.includes(k)).sort((a, b) => {
+                      const na = parseInt((a.match(/\d+/) || [])[0]);
+                      const nb = parseInt((b.match(/\d+/) || [])[0]);
+                      return (isNaN(na) ? 0 : na) - (isNaN(nb) ? 0 : nb);
+                  });
+                  keys = [...fixed, ...stepCols];
+              }
+
+              // Create header
+              headerRow.innerHTML = keys.map(key =>
+                  `<th class="p-3 text-left font-semibold border-b-2 border-gray-300">${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}</th>`
+              ).join('');
+
+              // Create rows
+              tbody.innerHTML = data.map(row => {
+                  return '<tr class="even:bg-gray-50 hover:bg-blue-50">' + keys.map(key => {
+                      let value = row[key] || '';
+                      let cellClass = 'p-3 border-b border-gray-100 align-top';
+                      let originalValue = value; // Keep original for comparison
+
+                      // Apply formatters
+                      if (formatters[key]) {
+                          value = formatters[key](value);
+                          cellClass += ' text-right font-mono font-medium';
+                          if (key.includes('budget') || key.includes('amount') || key.includes('cost')) {
+                              cellClass += ' text-green-600';
+                              // Check original numeric value, not formatted string
+                              if (typeof originalValue === 'number' && originalValue < 0) {
+                                  cellClass += ' text-red-600';
+                              }
+                          }
+                      }
+
+                      return `<td class="${cellClass}">${value}</td>`;
+                  }).join('') + '</tr>';
+              }).join('');
+          }
+
+          function createPivotTable(budgetData) {
+              if (!budgetData || budgetData.length === 0) return [];
+
+              // Group by item
+              const grouped = {};
+              budgetData.forEach(row => {
+                  const item = row.item || 'Unknown';
+                  if (!grouped[item]) {
+                      grouped[item] = {
+                          item: item,
+                          description: row.description || '',
+                          type: row.type || ''
+                      };
+                  }
+
+                  // Add step-based budget columns
+                  const step = `Step ${row.step || 0}`;
+                  grouped[item][step] = (grouped[item][step] || 0) + (row.budget || 0);
+              });
+
+              return Object.values(grouped);
+          }
+
+          // Form submission
+          document.getElementById('simulationForm').addEventListener('submit', async (e) => {
+              e.preventDefault();
+
+              // Build FormData with persisted files
+              const formData = new FormData();
+              let hasRequiredFiles = false;
+
+              try {
+                  // Check for main simulation file (required)
+                  const mainYamlStored = localStorage.getItem('file_yaml_file');
+                  if (mainYamlStored) {
+                      const mainFile = JSON.parse(mainYamlStored);
+                      if (mainFile && mainFile.content) {
+                          console.log(`Using stored yaml_file: ${mainFile.name} (${mainFile.content.length} bytes)`);
+                          formData.append('yaml_file', new File([mainFile.content], mainFile.name, { type: mainFile.type }));
+                          hasRequiredFiles = true;
+                      }
+                  }
+
+                  // Only proceed if we have the required yaml file
+                  if (!hasRequiredFiles) {
+                      alert("Please upload a simulation YAML file");
+                      throw new Error("Missing required simulation YAML file");
+                  }
+
+                  // Add optional files
+                  ['fcrdata_file', 'supportdata_file'].forEach(id => {
+                      const stored = localStorage.getItem('file_' + id);
+                      if (stored) {
+                          const f = JSON.parse(stored);
+                          if (f && f.content) {
+                              console.log(`Using stored ${id}: ${f.name} (${f.content.length} bytes)`);
+                              formData.append(id, new File([f.content], f.name, { type: f.type }));
+                          }
+                      }
+                  });
+
+                  // Append steps
+                  formData.append('steps', document.getElementById('steps').value);
+              } catch (error) {
+                  console.error("Error preparing form data:", error);
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = '🚀 Run Simulation';
+                  return; // Stop form submission
+              }
+
+              const submitBtn = document.getElementById('submitBtn');
+              const responseArea = document.getElementById('responseArea');
+              const tabContainer = document.getElementById('tabContainer');
+              const loadingIndicator = document.getElementById('loadingIndicator');
+              const responseContent = document.getElementById('responseContent');
+
+              // Show loading state
+              submitBtn.disabled = true;
+              submitBtn.textContent = '⏳ Running...';
+              responseArea.classList.remove('hidden');
+              responseArea.classList.add('block');
+              tabContainer.classList.add('hidden');
+              loadingIndicator.classList.remove('hidden');
+
+              try {
+                  const response = await fetch('/simulate', {
+                      method: 'POST',
+                      body: formData
+                  });
+
+                  const result = await response.json();
+
+                  if (response.ok) {
+                      // Show tab container
+                      tabContainer.classList.remove('hidden');
+
+                      // Render tables
+                      const budgetFormatters = {
+                          budget: formatCurrency,
+                          step: formatNumber
+                      };
+
+                      const projectFormatters = {
+                          budget: formatCurrency,
+                          cost: formatCurrency,
+                          income: formatCurrency,
+                          term: formatNumber
+                      };
+
+                      const transactionFormatters = {
+                          amount: formatCurrency,
+                          balance: formatCurrency,
+                          date: formatNumber
+                      };
+
+                      // Use pivot data if available, otherwise create it from budget data
+                      let budgetTableData;
+                      if (result.budget_pivot && result.budget_pivot.length > 0) {
+                          budgetTableData = result.budget_pivot;
+
+                          // Create formatters for step columns
+                          const pivotFormatters = {};
+                          if (budgetTableData.length > 0) {
+                              Object.keys(budgetTableData[0]).forEach(key => {
+                                  if (key.match(/^\d+$/) || key.includes('Step')) {
+                                      pivotFormatters[key] = formatCurrency;
+                                  }
+                              });
+                          }
+
+                          renderTable('budgetTable', budgetTableData, pivotFormatters);
+                      } else {
+                          // Fallback: create pivot table from budget data
+                          budgetTableData = createPivotTable(result.budget || []);
+
+                          // Find all step columns for pivot table
+                          const stepColumns = {};
+                          (result.budget || []).forEach(row => {
+                              const step = `Step ${row.step || 0}`;
+                              stepColumns[step] = formatCurrency;
+                          });
+
+                          const pivotFormatters = {
+                              ...stepColumns
+                          };
+
+                          renderTable('budgetTable', budgetTableData, pivotFormatters);
+                      }
+
+                      renderTable('projectsTable', result.projects || [], projectFormatters);
+                      renderTable('transactionsTable', result.transactions || [], transactionFormatters);
+
+                      // Show raw JSON
+                      responseContent.textContent = JSON.stringify(result, null, 2);
+                      responseContent.classList.remove('text-red-500');
+                      responseContent.classList.add('text-green-600');
+
+                  } else {
+                      // Show error in raw JSON tab
+                      tabContainer.classList.remove('hidden');
+                      showTab('raw-json');
+                      responseContent.textContent = JSON.stringify(result, null, 2);
+                      responseContent.classList.remove('text-green-600');
+                      responseContent.classList.add('text-red-500');
+                  }
+
+              } catch (error) {
+                  tabContainer.classList.remove('hidden');
+                  showTab('raw-json');
+                  responseContent.textContent = `Error: ${error.message}`;
+                  responseContent.classList.remove('text-green-600');
+                  responseContent.classList.add('text-red-500');
+              } finally {
+                  // Reset button state
+                  submitBtn.disabled = false;
+                  submitBtn.textContent = '🚀 Run Simulation';
+                  loadingIndicator.classList.add('hidden');
+              }
+          });
     </script>
-</body>
+  </body>
 </html>

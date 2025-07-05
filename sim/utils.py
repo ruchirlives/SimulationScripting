@@ -31,8 +31,8 @@ def pivotbudget(db: pd.DataFrame) -> pd.DataFrame:
     lookup_dict_type = {row["item"]: row.get("type", "") for _, row in db.iterrows()}
     df["description"] = df.index.map(lookup_dict_description).fillna("")
     df["type"] = df.index.map(lookup_dict_type).fillna("")
-    columns_except_extra = [col for col in df.columns if col not in ["description", "type"]]
-    new_column_order = ["description", "type"] + columns_except_extra
+    columns_except_extra = [col for col in df.columns if col not in ["description", "type", "item"]]
+    new_column_order = ["item", "description", "type"] + columns_except_extra
     df = df[new_column_order]
     pf = df.iloc[::-1]
     pf = pf.sort_values(by="type", ascending=True)

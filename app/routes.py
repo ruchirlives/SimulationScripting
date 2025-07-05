@@ -219,6 +219,9 @@ def simulate_run():
                 # Convert budget data to DataFrame
                 budget_df = pd.DataFrame(result["budget"])
 
+                # Round all numbers to 2 decimal places
+                budget_df = budget_df.round(2)
+
                 # Apply pivot transformation
                 pivot_df = pivotbudget(budget_df)
 
