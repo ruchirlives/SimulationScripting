@@ -1,1 +1,14 @@
+
 pytest
+
+Flask
+openai
+pandas
+simpy
+neo4j
+neomodel
+astrapy
+beautifulsoup4
+python-docx
+requests
+
