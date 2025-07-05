@@ -3,6 +3,9 @@ from flask_dance.contrib.google import make_google_blueprint, google
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
+# Expose the Google OAuth blueprint so other modules can import it
+google_bp = make_google_blueprint(scope=["profile", "email"], redirect_url="/simulate")
+
 from .routes import openai_bp, astra_bp, sim_bp, root_bp
 
 
@@ -30,7 +33,7 @@ def create_app() -> Flask:
 
     os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"  # Optional for scope leniency
 
-    google_bp = make_google_blueprint(scope=["profile", "email"], redirect_url="/simulate")
+    # Register the Google OAuth blueprint created at module load
     app.register_blueprint(google_bp, url_prefix="/login")
 
     # Register your app blueprints

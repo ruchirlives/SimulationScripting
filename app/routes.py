@@ -1,5 +1,7 @@
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for, session
 from flask_dance.contrib.google import google
+# Import the OAuth blueprint created in app.__init__
+from . import google_bp
 import logging
 import json
 import math
@@ -351,21 +353,15 @@ def logout():
     logging.info("=== LOGOUT PROCESS STARTED ===")
     logging.info(f"Before logout - Google authorized: {google.authorized}")
     logging.info(f"Before logout - Session keys: {list(session.keys())}")
-    
-    # Clear the entire session first
+
+    # Check if an OAuth token exists prior to clearing
+    token_exists = hasattr(google_bp, "token") and google_bp.token is not None
+    logging.info(f"OAuth token existed: {token_exists}")
+
+    # Clear the entire session
     session.clear()
-    logging.info("Session cleared")
-    
-    # Force clear any flask-dance tokens
-    try:
-        # Clear all flask-dance related session data
-        for key in list(session.keys()):
-            if 'google' in key.lower() or 'oauth' in key.lower():
-                del session[key]
-                logging.info(f"Cleared session key: {key}")
-    except Exception as e:
-        logging.error(f"Error clearing oauth session data: {e}")
-    
+    google_bp.token = None
+
     logging.info(f"After logout - Google authorized: {google.authorized}")
     logging.info(f"After logout - Session keys: {list(session.keys())}")
     logging.info("=== LOGOUT PROCESS COMPLETED ===")
