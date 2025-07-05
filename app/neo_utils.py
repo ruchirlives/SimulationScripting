@@ -1,3 +1,5 @@
+"""Utility functions for Neo4j database operations."""
+
 import os
 from neo4j import GraphDatabase
 from neomodel import config, db
