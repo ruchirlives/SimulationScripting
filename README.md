@@ -46,6 +46,15 @@ flask --app app.py run
 
 The server will be available at `http://127.0.0.1:5000/`.
 
+## Running Tests
+
+Install dependencies and run pytest:
+
+```bash
+pip install -r requirements.txt
+pytest
+```
+
 ## Example Requests
 
 Here is a basic example of sending a request to an API endpoint called `/simulate`:
@@ -57,5 +66,4 @@ curl -X POST http://127.0.0.1:5000/simulate \
 ```
 
 The actual endpoints will depend on how you combine the code from the notebooks into a Flask application.
-
 

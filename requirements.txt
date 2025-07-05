@@ -1,3 +1,6 @@
+
+pytest
+
 Flask
 openai
 pandas
@@ -8,3 +11,4 @@ astrapy
 beautifulsoup4
 python-docx
 requests
+
