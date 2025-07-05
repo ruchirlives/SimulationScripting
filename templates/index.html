@@ -42,6 +42,7 @@
                             <p class="text-gray-600">Click to select or drag & drop your simulation YAML file</p>
                             <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required class="hidden">
                             <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="yaml_file_info"></div>
+                            <button type="button" class="absolute top-2 right-2 text-xs text-gray-500 hover:text-red-500 clear-file px-2 py-1 rounded hover:bg-red-50" data-target="yaml_file">Clear</button>
                         </div>
                     </div>
                 </div>
@@ -57,6 +58,7 @@
                             <p class="text-gray-600">Click to select or drag & drop FCR data YAML file</p>
                             <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" class="hidden">
                             <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="fcrdata_file_info"></div>
+                            <button type="button" class="absolute top-2 right-2 text-xs text-gray-500 hover:text-red-500 clear-file px-2 py-1 rounded hover:bg-red-50" data-target="fcrdata_file">Clear</button>
                         </div>
                     </div>
 
@@ -67,6 +69,7 @@
                             <p class="text-gray-600">Click to select or drag & drop support data YAML file</p>
                             <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" class="hidden">
                             <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="supportdata_file_info"></div>
+                            <button type="button" class="absolute top-2 right-2 text-xs text-gray-500 hover:text-red-500 clear-file px-2 py-1 rounded hover:bg-red-50" data-target="supportdata_file">Clear</button>
                         </div>
                     </div>
                 </div>
@@ -188,11 +191,83 @@
             });
         });
 
+            <div class="mt-2 flex justify-end">
+                <button type="button" class="text-xs text-gray-500 hover:text-red-500 clear-file" data-target="${id}">Clear</button>
+            </div>
+        </div>
+    </div>
+
+        // Add clear file functionality
+        document.querySelectorAll('.clear-file').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const targetId = btn.getAttribute('data-target');
+                const area = document.querySelector(`.file-upload-area[data-target="${targetId}"]`);
+                const input = document.getElementById(targetId);
+                const info = document.getElementById(targetId + '_info');
+                
+                // Clear file input and localStorage
+                input.value = '';
+                localStorage.removeItem('file_' + targetId);
+                info.classList.add('hidden');
+                area.classList.remove('border-indigo-500', 'bg-indigo-50');
+            });
+        });
+
+        // Restore persisted files on load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("Loading saved files from localStorage");
+            ['yaml_file', 'fcrdata_file', 'supportdata_file'].forEach(id => {
+                try {
+                    const stored = localStorage.getItem('file_' + id);
+                    if (stored) {
+                        const data = JSON.parse(stored);
+                        console.log(`Found stored file: ${id}, ${data.name}, ${data.content ? data.content.length + ' bytes' : 'missing content'}`);
+                        const area = document.querySelector(`.file-upload-area[data-target="${id}"]`);
+                        const info = document.getElementById(id + '_info');
+                        info.textContent = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB)`;
+                        info.classList.remove('hidden');
+                        area.classList.add('border-indigo-500', 'bg-indigo-50');
+                    }
+                } catch (error) {
+                    console.error(`Error loading ${id} from localStorage:`, error);
+                }
+            });
+            
+            // Add event listeners for clear buttons
+            document.querySelectorAll('.clear-file').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const targetId = btn.getAttribute('data-target');
+                    const area = document.querySelector(`.file-upload-area[data-target="${targetId}"]`);
+                    const info = document.getElementById(targetId + '_info');
+                    
+                    console.log(`Clearing file: ${targetId}`);
+                    localStorage.removeItem('file_' + targetId);
+                    info.classList.add('hidden');
+                    area.classList.remove('border-indigo-500', 'bg-indigo-50');
+                });
+            });
+        });
+
         function updateFileInfo(input, info) {
             if (input.files.length > 0) {
                 const file = input.files[0];
                 info.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
                 info.classList.remove('hidden');
+                // Persist file content
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const content = event.target.result;
+                        const payload = { name: file.name, size: file.size, type: file.type, content };
+                        localStorage.setItem('file_' + input.id, JSON.stringify(payload));
+                        console.log(`File ${file.name} saved to localStorage (${content.length} bytes)`);
+                    } catch (error) {
+                        console.error("Error saving file to localStorage:", error);
+                    }
+                };
+                reader.readAsText(file);
             } else {
                 info.classList.add('hidden');
             }
@@ -232,7 +307,8 @@
                 return new Intl.NumberFormat('en-GB', {
                     style: 'currency',
                     currency: 'GBP',
-                    minimumFractionDigits: 2
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0
                 }).format(value);
             }
             return value;
@@ -260,7 +336,17 @@
             }
             
             // Get all unique keys from the data
-            const keys = [...new Set(data.flatMap(Object.keys))];
+            let keys = [...new Set(data.flatMap(Object.keys))];
+            // Reorder columns for budget table: description, item, type first, then step columns
+            if (tableId === 'budgetTable') {
+                const fixed = ['description', 'item', 'type'];
+                const stepCols = keys.filter(k => !fixed.includes(k)).sort((a, b) => {
+                    const na = parseInt((a.match(/\d+/) || [])[0]);
+                    const nb = parseInt((b.match(/\d+/) || [])[0]);
+                    return (isNaN(na) ? 0 : na) - (isNaN(nb) ? 0 : nb);
+                });
+                keys = [...fixed, ...stepCols];
+            }
             
             // Create header
             headerRow.innerHTML = keys.map(key => 
@@ -319,7 +405,49 @@
         document.getElementById('simulationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
+            // Build FormData with persisted files
+            const formData = new FormData();
+            let hasRequiredFiles = false;
+            
+            try {
+                // Check for main simulation file (required)
+                const mainYamlStored = localStorage.getItem('file_yaml_file');
+                if (mainYamlStored) {
+                    const mainFile = JSON.parse(mainYamlStored);
+                    if (mainFile && mainFile.content) {
+                        console.log(`Using stored yaml_file: ${mainFile.name} (${mainFile.content.length} bytes)`);
+                        formData.append('yaml_file', new File([mainFile.content], mainFile.name, { type: mainFile.type }));
+                        hasRequiredFiles = true;
+                    }
+                }
+                
+                // Only proceed if we have the required yaml file
+                if (!hasRequiredFiles) {
+                    alert("Please upload a simulation YAML file");
+                    throw new Error("Missing required simulation YAML file");
+                }
+                
+                // Add optional files
+                ['fcrdata_file', 'supportdata_file'].forEach(id => {
+                    const stored = localStorage.getItem('file_' + id);
+                    if (stored) {
+                        const f = JSON.parse(stored);
+                        if (f && f.content) {
+                            console.log(`Using stored ${id}: ${f.name} (${f.content.length} bytes)`);
+                            formData.append(id, new File([f.content], f.name, { type: f.type }));
+                        }
+                    }
+                });
+                
+                // Append steps
+                formData.append('steps', document.getElementById('steps').value);
+            } catch (error) {
+                console.error("Error preparing form data:", error);
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Run Simulation';
+                return; // Stop form submission
+            }
+            
             const submitBtn = document.getElementById('submitBtn');
             const responseArea = document.getElementById('responseArea');
             const tabContainer = document.getElementById('tabContainer');
