@@ -4,416 +4,111 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulation Backend - YAML Upload</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin': 'spin 1s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
-        }
-
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .form-container {
-            padding: 40px;
-        }
-
-        .form-section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            background: #f9f9f9;
-        }
-
-        .form-section h3 {
-            color: #2c3e50;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #34495e;
-        }
-
-        input[type="file"], input[type="number"] {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-
-        input[type="file"]:focus, input[type="number"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .file-upload-area {
-            position: relative;
-            border: 2px dashed #ddd;
-            border-radius: 8px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .file-upload-area:hover {
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
-
-        .file-upload-area.dragover {
-            border-color: #667eea;
-            background: #e8f2ff;
-        }
-
-        .upload-icon {
-            font-size: 2rem;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .file-info {
-            margin-top: 10px;
-            padding: 8px;
-            background: #e8f5e8;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            color: #2e7d32;
-        }
-
-        .submit-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s ease;
-            width: 100%;
-            margin-top: 20px;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .response-area {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            display: none;
-        }
-
-        .response-area.show {
-            display: block;
-        }
-
-        .response-area pre {
-            background: #2d3748;
-            color: #e2e8f0;
-            padding: 15px;
-            border-radius: 6px;
-            overflow-x: auto;
-            font-size: 0.9rem;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 20px;
-        }
-
-        .spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 15px;
-        }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        .example-link {
-            display: inline-block;
-            margin-top: 15px;
-            color: #667eea;
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .example-link:hover {
-            text-decoration: underline;
-        }
-
-        .optional-label {
-            color: #666;
-            font-size: 0.9rem;
-            font-weight: normal;
-        }
-
-        /* Tab Styles */
-        .tab-container {
-            margin-top: 20px;
-        }
-
-        .tab-nav {
-            display: flex;
-            border-bottom: 2px solid #e0e0e0;
-            margin-bottom: 20px;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 12px 20px;
-            cursor: pointer;
-            border-bottom: 3px solid transparent;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            color: #666;
-            font-size: 0.95rem;
-        }
-
-        .tab-btn:hover {
-            background: #f0f4ff;
-            color: #667eea;
-        }
-
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-            background: #f0f4ff;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Table Styles */
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            border: 1px solid #e0e0e0;
-            background: white;
-        }
-
-        .results-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        .results-table th {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 8px;
-            text-align: left;
-            font-weight: 600;
-            border-bottom: 2px solid #ddd;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .results-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #f0f0f0;
-            vertical-align: top;
-        }
-
-        .results-table tr:nth-child(even) {
-            background: #f9f9f9;
-        }
-
-        .results-table tr:hover {
-            background: #f0f4ff;
-        }
-
-        /* Number formatting */
-        .number-cell {
-            text-align: right;
-            font-family: 'Courier New', monospace;
-            font-weight: 500;
-        }
-
-        .currency-cell {
-            color: #2e7d32;
-        }
-
-        .negative-currency {
-            color: #d32f2f;
-        }
-
-        /* Responsive table */
-        @media (max-width: 768px) {
-            .tab-nav {
-                flex-direction: column;
-            }
-            
-            .tab-btn {
-                text-align: center;
-                border-bottom: none;
-                border-left: 3px solid transparent;
-            }
-            
-            .tab-btn.active {
-                border-left-color: #667eea;
-                border-bottom-color: transparent;
-            }
-            
-            .results-table th,
-            .results-table td {
-                padding: 8px 4px;
-                font-size: 0.8rem;
-            }
-        }
     </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🚀 Simulation Backend</h1>
-            <p>Upload YAML files to run portfolio simulations</p>
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-purple-600 min-h-screen p-5 font-sans">
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
+        <div class="bg-gradient-to-r from-slate-700 to-slate-600 text-white p-8 text-center">
+            <h1 class="text-4xl font-bold mb-3">🚀 Simulation Backend</h1>
+            <p class="text-lg opacity-90">Upload YAML files to run portfolio simulations</p>
         </div>
 
-        <div class="form-container">
+        <div class="p-10">
             <form id="simulationForm" enctype="multipart/form-data">
                 <!-- Main Simulation File -->
-                <div class="form-section">
-                    <h3>📊 Main Simulation Configuration</h3>
-                    <div class="form-group">
-                        <label for="yaml_file">Simulation YAML File <span style="color: red;">*</span></label>
-                        <div class="file-upload-area" data-target="yaml_file">
-                            <div class="upload-icon">📁</div>
-                            <p>Click to select or drag & drop your simulation YAML file</p>
-                            <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required style="display: none;">
-                            <div class="file-info" id="yaml_file_info" style="display: none;"></div>
+                <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
+                    <h3 class="text-slate-700 mb-4 text-xl font-semibold">📊 Main Simulation Configuration</h3>
+                    <div class="mb-5">
+                        <label for="yaml_file" class="block mb-2 font-semibold text-slate-600">Simulation YAML File <span class="text-red-500">*</span></label>
+                        <div class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50" data-target="yaml_file">
+                            <div class="text-2xl text-indigo-500 mb-3">📁</div>
+                            <p class="text-gray-600">Click to select or drag & drop your simulation YAML file</p>
+                            <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required class="hidden">
+                            <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="yaml_file_info"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Optional Data Files -->
-                <div class="form-section">
-                    <h3>📋 Additional Data Files <span class="optional-label">(Optional)</span></h3>
+                <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
+                    <h3 class="text-slate-700 mb-4 text-xl font-semibold">📋 Additional Data Files <span class="text-gray-500 text-sm font-normal">(Optional)</span></h3>
                     
-                    <div class="form-group">
-                        <label for="fcrdata_file">FCR Data YAML File</label>
-                        <div class="file-upload-area" data-target="fcrdata_file">
-                            <div class="upload-icon">📄</div>
-                            <p>Click to select or drag & drop FCR data YAML file</p>
-                            <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" style="display: none;">
-                            <div class="file-info" id="fcrdata_file_info" style="display: none;"></div>
+                    <div class="mb-5">
+                        <label for="fcrdata_file" class="block mb-2 font-semibold text-slate-600">FCR Data YAML File</label>
+                        <div class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50" data-target="fcrdata_file">
+                            <div class="text-2xl text-indigo-500 mb-3">📄</div>
+                            <p class="text-gray-600">Click to select or drag & drop FCR data YAML file</p>
+                            <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" class="hidden">
+                            <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="fcrdata_file_info"></div>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="supportdata_file">Support Data YAML File</label>
-                        <div class="file-upload-area" data-target="supportdata_file">
-                            <div class="upload-icon">📄</div>
-                            <p>Click to select or drag & drop support data YAML file</p>
-                            <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" style="display: none;">
-                            <div class="file-info" id="supportdata_file_info" style="display: none;"></div>
+                    <div class="mb-5">
+                        <label for="supportdata_file" class="block mb-2 font-semibold text-slate-600">Support Data YAML File</label>
+                        <div class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50" data-target="supportdata_file">
+                            <div class="text-2xl text-indigo-500 mb-3">📄</div>
+                            <p class="text-gray-600">Click to select or drag & drop support data YAML file</p>
+                            <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" class="hidden">
+                            <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="supportdata_file_info"></div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Simulation Parameters -->
-                <div class="form-section">
-                    <h3>⚙️ Simulation Parameters</h3>
-                    <div class="form-group">
-                        <label for="steps">Number of Steps</label>
+                <div class="mb-8 p-5 border border-gray-200 rounded-lg bg-gray-50">
+                    <h3 class="text-slate-700 mb-4 text-xl font-semibold">⚙️ Simulation Parameters</h3>
+                    <div class="mb-5">
+                        <label for="steps" class="block mb-2 font-semibold text-slate-600">Number of Steps</label>
                         <input type="number" id="steps" name="steps" value="12" min="1" max="120" 
-                               placeholder="Enter number of simulation steps">
+                               placeholder="Enter number of simulation steps"
+                               class="w-full p-3 border-2 border-gray-300 rounded-md text-sm transition-colors duration-300 focus:outline-none focus:border-indigo-500">
                     </div>
                 </div>
 
-                <button type="submit" class="submit-btn" id="submitBtn">
+                <button type="submit" class="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-lg text-lg font-semibold transition-transform duration-200 hover:-translate-y-1 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none mt-5" id="submitBtn">
                     🚀 Run Simulation
                 </button>
             </form>
 
-            <div class="response-area" id="responseArea">
-                <h3>📈 Simulation Results</h3>
-                <div id="loadingIndicator" class="loading" style="display: none;">
-                    <div class="spinner"></div>
-                    <p>Running simulation...</p>
+            <div class="response-area mt-8 p-5 bg-gray-50 rounded-lg hidden" id="responseArea">
+                <h3 class="text-xl font-semibold mb-4">📈 Simulation Results</h3>
+                <div id="loadingIndicator" class="text-center p-5 hidden">
+                    <div class="w-8 h-8 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+                    <p class="text-gray-600">Running simulation...</p>
                 </div>
                 
                 <!-- Tab Navigation -->
-                <div class="tab-container" id="tabContainer" style="display: none;">
-                    <div class="tab-nav">
-                        <button class="tab-btn active" onclick="showTab('budget-table')">📊 Budget Table</button>
-                        <button class="tab-btn" onclick="showTab('projects-table')">🏗️ Projects</button>
-                        <button class="tab-btn" onclick="showTab('transactions-table')">💰 Transactions</button>
-                        <button class="tab-btn" onclick="showTab('raw-json')">📄 Raw JSON</button>
+                <div class="tab-container mt-5 hidden" id="tabContainer">
+                    <div class="flex border-b-2 border-gray-200 mb-5 gap-3 flex-wrap">
+                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500 active border-b-indigo-500 text-indigo-500 bg-blue-50" onclick="showTab('budget-table')">📊 Budget Table</button>
+                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500" onclick="showTab('projects-table')">🏗️ Projects</button>
+                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500" onclick="showTab('transactions-table')">💰 Transactions</button>
+                        <button class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500" onclick="showTab('raw-json')">📄 Raw JSON</button>
                     </div>
                     
                     <!-- Budget Table Tab -->
-                    <div id="budget-table" class="tab-content active">
-                        <div class="table-container">
-                            <table id="budgetTable" class="results-table">
+                    <div id="budget-table" class="tab-content block">
+                        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                            <table id="budgetTable" class="w-full border-collapse text-sm">
                                 <thead>
-                                    <tr id="budgetTableHeader"></tr>
+                                    <tr id="budgetTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
                                 </thead>
                                 <tbody id="budgetTableBody"></tbody>
                             </table>
@@ -421,11 +116,11 @@
                     </div>
                     
                     <!-- Projects Table Tab -->
-                    <div id="projects-table" class="tab-content">
-                        <div class="table-container">
-                            <table id="projectsTable" class="results-table">
+                    <div id="projects-table" class="tab-content hidden">
+                        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                            <table id="projectsTable" class="w-full border-collapse text-sm">
                                 <thead>
-                                    <tr id="projectsTableHeader"></tr>
+                                    <tr id="projectsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
                                 </thead>
                                 <tbody id="projectsTableBody"></tbody>
                             </table>
@@ -433,11 +128,11 @@
                     </div>
                     
                     <!-- Transactions Table Tab -->
-                    <div id="transactions-table" class="tab-content">
-                        <div class="table-container">
-                            <table id="transactionsTable" class="results-table">
+                    <div id="transactions-table" class="tab-content hidden">
+                        <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                            <table id="transactionsTable" class="w-full border-collapse text-sm">
                                 <thead>
-                                    <tr id="transactionsTableHeader"></tr>
+                                    <tr id="transactionsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
                                 </thead>
                                 <tbody id="transactionsTableBody"></tbody>
                             </table>
@@ -445,14 +140,14 @@
                     </div>
                     
                     <!-- Raw JSON Tab -->
-                    <div id="raw-json" class="tab-content">
-                        <pre id="responseContent"></pre>
+                    <div id="raw-json" class="tab-content hidden">
+                        <pre id="responseContent" class="bg-slate-800 text-gray-200 p-4 rounded-md overflow-x-auto text-sm"></pre>
                     </div>
                 </div>
             </div>
 
-            <div style="text-align: center; margin-top: 30px;">
-                <a href="/simulate/example" class="example-link" target="_blank">
+            <div class="text-center mt-8">
+                <a href="/simulate/example" class="inline-block mt-4 text-indigo-500 no-underline font-medium hover:underline" target="_blank">
                     📖 View Example YAML Configuration
                 </a>
             </div>
@@ -470,16 +165,16 @@
             // Drag and drop
             area.addEventListener('dragover', (e) => {
                 e.preventDefault();
-                area.classList.add('dragover');
+                area.classList.add('border-indigo-500', 'bg-indigo-50');
             });
             
             area.addEventListener('dragleave', () => {
-                area.classList.remove('dragover');
+                area.classList.remove('border-indigo-500', 'bg-indigo-50');
             });
             
             area.addEventListener('drop', (e) => {
                 e.preventDefault();
-                area.classList.remove('dragover');
+                area.classList.remove('border-indigo-500', 'bg-indigo-50');
                 
                 const files = e.dataTransfer.files;
                 if (files.length > 0) {
@@ -497,9 +192,9 @@
             if (input.files.length > 0) {
                 const file = input.files[0];
                 info.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-                info.style.display = 'block';
+                info.classList.remove('hidden');
             } else {
-                info.style.display = 'none';
+                info.classList.add('hidden');
             }
         }
 
@@ -507,22 +202,26 @@
         function showTab(tabId) {
             // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.remove('active');
+                content.classList.add('hidden');
+                content.classList.remove('block');
             });
             
             // Remove active class from all tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
+                btn.classList.remove('active', 'border-b-indigo-500', 'text-indigo-500', 'bg-blue-50');
+                btn.classList.add('border-b-transparent', 'text-gray-600');
             });
             
             // Show selected tab content
-            document.getElementById(tabId).classList.add('active');
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId).classList.add('block');
             
             // Find and activate the correct button
             const buttons = document.querySelectorAll('.tab-btn');
             buttons.forEach(btn => {
                 if (btn.getAttribute('onclick').includes(tabId)) {
-                    btn.classList.add('active');
+                    btn.classList.add('active', 'border-b-indigo-500', 'text-indigo-500', 'bg-blue-50');
+                    btn.classList.remove('border-b-transparent', 'text-gray-600');
                 }
             });
         }
@@ -555,7 +254,7 @@
             const tbody = document.getElementById(tableId + 'Body');
             
             if (!data || data.length === 0) {
-                headerRow.innerHTML = '<th>No data available</th>';
+                headerRow.innerHTML = '<th class="p-3 text-left font-semibold border-b-2 border-gray-300">No data available</th>';
                 tbody.innerHTML = '';
                 return;
             }
@@ -565,25 +264,25 @@
             
             // Create header
             headerRow.innerHTML = keys.map(key => 
-                `<th>${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}</th>`
+                `<th class="p-3 text-left font-semibold border-b-2 border-gray-300">${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}</th>`
             ).join('');
             
             // Create rows
             tbody.innerHTML = data.map(row => {
-                return '<tr>' + keys.map(key => {
+                return '<tr class="even:bg-gray-50 hover:bg-blue-50">' + keys.map(key => {
                     let value = row[key] || '';
-                    let cellClass = '';
+                    let cellClass = 'p-3 border-b border-gray-100 align-top';
                     let originalValue = value; // Keep original for comparison
                     
                     // Apply formatters
                     if (formatters[key]) {
                         value = formatters[key](value);
-                        cellClass = 'number-cell';
+                        cellClass += ' text-right font-mono font-medium';
                         if (key.includes('budget') || key.includes('amount') || key.includes('cost')) {
-                            cellClass += ' currency-cell';
+                            cellClass += ' text-green-600';
                             // Check original numeric value, not formatted string
                             if (typeof originalValue === 'number' && originalValue < 0) {
-                                cellClass += ' negative-currency';
+                                cellClass += ' text-red-600';
                             }
                         }
                     }
@@ -630,9 +329,10 @@
             // Show loading state
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Running...';
-            responseArea.classList.add('show');
-            tabContainer.style.display = 'none';
-            loadingIndicator.style.display = 'block';
+            responseArea.classList.remove('hidden');
+            responseArea.classList.add('block');
+            tabContainer.classList.add('hidden');
+            loadingIndicator.classList.remove('hidden');
             
             try {
                 const response = await fetch('/simulate', {
@@ -644,7 +344,7 @@
                 
                 if (response.ok) {
                     // Show tab container
-                    tabContainer.style.display = 'block';
+                    tabContainer.classList.remove('hidden');
                     
                     // Render tables
                     const budgetFormatters = {
@@ -704,26 +404,29 @@
                     
                     // Show raw JSON
                     responseContent.textContent = JSON.stringify(result, null, 2);
-                    responseContent.style.color = '#2e7d32';
+                    responseContent.classList.remove('text-red-500');
+                    responseContent.classList.add('text-green-600');
                     
                 } else {
                     // Show error in raw JSON tab
-                    tabContainer.style.display = 'block';
+                    tabContainer.classList.remove('hidden');
                     showTab('raw-json');
                     responseContent.textContent = JSON.stringify(result, null, 2);
-                    responseContent.style.color = '#e74c3c';
+                    responseContent.classList.remove('text-green-600');
+                    responseContent.classList.add('text-red-500');
                 }
                 
             } catch (error) {
-                tabContainer.style.display = 'block';
+                tabContainer.classList.remove('hidden');
                 showTab('raw-json');
                 responseContent.textContent = `Error: ${error.message}`;
-                responseContent.style.color = '#e74c3c';
+                responseContent.classList.remove('text-green-600');
+                responseContent.classList.add('text-red-500');
             } finally {
                 // Reset button state
                 submitBtn.disabled = false;
                 submitBtn.textContent = '🚀 Run Simulation';
-                loadingIndicator.style.display = 'none';
+                loadingIndicator.classList.add('hidden');
             }
         });
     </script>
