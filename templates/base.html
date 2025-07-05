@@ -26,8 +26,20 @@
   <body class="w-full p-5 font-sans">
     <div class="mx-auto bg-white rounded-xl shadow-2xl overflow-hidden">
       <div class="bg-gradient-to-r from-slate-700 to-slate-600 text-white p-8 text-center">
-        <h1 class="text-4xl font-bold mb-3">🚀 Simulation Backend</h1>
-        <p class="text-lg opacity-90">Upload YAML files to run portfolio simulations</p>
+        <div class="flex justify-between items-center">
+          <div class="flex-1">
+            <h1 class="text-4xl font-bold mb-3">🚀 Simulation Backend</h1>
+            <p class="text-lg opacity-90">Upload YAML files to run portfolio simulations</p>
+          </div>
+          {% if user_info %}
+          <div class="text-right">
+            <p class="text-sm opacity-80">Hello, {{ user_info.name or user_info.email }}!</p>
+            <a href="{{ url_for('root.logout') }}" class="inline-block mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-colors">
+              Logout
+            </a>
+          </div>
+          {% endif %}
+        </div>
       </div>
       <div class="p-10">
         {% block content %}{% endblock %}

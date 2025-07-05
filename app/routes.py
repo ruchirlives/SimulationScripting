@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for
+from flask_dance.contrib.google import google
 import logging
 import json
 import math
@@ -313,14 +314,37 @@ events:
 @sim_bp.route("/", methods=["GET"])
 def index():
     """Serve the simulation upload form."""
-    return render_template("index.html")
-
-from flask_dance.contrib.google import google
+    # Check if user is authenticated
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    
+    # Get user info
+    user_info = None
+    try:
+        resp = google.get("/oauth2/v1/userinfo")
+        if resp.ok:
+            user_info = resp.json()
+    except Exception as e:
+        logging.error(f"Error getting user info: {e}")
+        user_info = {"name": "User", "email": ""}
+    
+    return render_template("index.html", user_info=user_info)
 
 @root_bp.route("/", methods=["GET"])
 def home():
     if not google.authorized:
         return redirect(url_for("google.login"))
+    return redirect(url_for("sim.index"))
+
+@root_bp.route("/logout")
+def logout():
+    """Logout the user and clear the session."""
+    if google.authorized:
+        # Revoke the token to properly log out
+        token = google.token
+        if token:
+            # Clear the token from the session
+            del google.token
     return redirect(url_for("sim.index"))
 
 @sim_bp.route("/pivot", methods=["POST"])
