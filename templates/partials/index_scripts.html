@@ -46,6 +46,10 @@
                   localStorage.removeItem('file_' + targetId);
                   info.classList.add('hidden');
                   area.classList.remove('border-indigo-500', 'bg-indigo-50');
+                  const editor = document.getElementById(targetId + '_editor');
+                  if (editor) {
+                      editor.value = '';
+                  }
               });
           });
 
@@ -60,11 +64,12 @@
                           console.log(`Found stored file: ${id}, ${data.name}, ${data.content ? data.content.length + ' bytes' : 'missing content'}`);
                           const area = document.querySelector(`.file-upload-area[data-target="${id}"]`);
                           const info = document.getElementById(id + '_info');
-                          
+                          const editor = document.getElementById(id + '_editor');
+
                           if (info) {
                               info.innerHTML = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB) <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="${id}">✕ Clear</button>`;
                               info.classList.remove('hidden');
-                              
+
                               // Add event listener to the clear button
                               const clearBtn = info.querySelector('.clear-file');
                               if (clearBtn) {
@@ -76,10 +81,17 @@
                                       if (area) {
                                           area.classList.remove('border-indigo-500', 'bg-indigo-50');
                                       }
+                                      if (editor) {
+                                          editor.value = '';
+                                      }
                                   });
                               }
                           }
-                          
+
+                          if (editor) {
+                              editor.value = data.content || '';
+                          }
+
                           if (area) {
                               area.classList.add('border-indigo-500', 'bg-indigo-50');
                           }
@@ -87,6 +99,36 @@
                   } catch (error) {
                       console.error(`Error loading ${id} from localStorage:`, error);
                   }
+              });
+
+              // Set up editor listeners
+              document.querySelectorAll('.yaml-editor').forEach(textarea => {
+                  textarea.addEventListener('input', () => {
+                      const targetId = textarea.getAttribute('data-target');
+                      let stored = localStorage.getItem('file_' + targetId);
+                      stored = stored ? JSON.parse(stored) : { name: targetId + '.yaml', type: 'text/yaml' };
+                      stored.content = textarea.value;
+                      stored.size = textarea.value.length;
+                      localStorage.setItem('file_' + targetId, JSON.stringify(stored));
+                  });
+              });
+
+              // Download buttons
+              document.querySelectorAll('.download-file').forEach(btn => {
+                  btn.addEventListener('click', () => {
+                      const id = btn.getAttribute('data-target');
+                      const storedStr = localStorage.getItem('file_' + id);
+                      if (storedStr) {
+                          const f = JSON.parse(storedStr);
+                          const blob = new Blob([f.content || ''], { type: 'text/yaml' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = f.name || id + '.yaml';
+                          a.click();
+                          URL.revokeObjectURL(url);
+                      }
+                  });
               });
           });
 
@@ -119,6 +161,10 @@
                           const content = event.target.result;
                           const payload = { name: file.name, size: file.size, type: file.type, content };
                           localStorage.setItem('file_' + input.id, JSON.stringify(payload));
+                          const editor = document.getElementById(input.id + '_editor');
+                          if (editor) {
+                              editor.value = content;
+                          }
                           console.log(`File ${file.name} saved to localStorage for ${input.id} (${content.length} bytes)`);
                       } catch (error) {
                           console.error(`Error saving file ${file.name} to localStorage:`, error);
