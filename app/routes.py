@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, render_template, redirect, url_for
 
 from .openai_utils import summarize
 from .astra_utils import update_record
@@ -7,6 +7,9 @@ from .simulation_utils import run_simulation
 openai_bp = Blueprint("openai", __name__, url_prefix="/openai")
 astra_bp = Blueprint("astra", __name__, url_prefix="/astra")
 sim_bp = Blueprint("sim", __name__, url_prefix="/simulate")
+
+# Create a root blueprint for the main routes
+root_bp = Blueprint("root", __name__)
 
 
 @openai_bp.route("/summarize", methods=["POST"])
@@ -202,3 +205,15 @@ def get_example_yaml():
             "usage": "Save this as a .yaml file and upload to /simulate",
         }
     )
+
+
+@sim_bp.route("/", methods=["GET"])
+def index():
+    """Serve the simulation upload form."""
+    return render_template("index.html")
+
+
+@root_bp.route("/", methods=["GET"])
+def home():
+    """Redirect to the simulation interface."""
+    return redirect(url_for("sim.index"))

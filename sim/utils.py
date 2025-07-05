@@ -39,8 +39,112 @@ def pivotbudget(db: pd.DataFrame) -> pd.DataFrame:
     return pf
 
 
-def parseYAML(yamltext: str):
-    """Parse YAML text and convert class strings to objects."""
+def parseYAML(yamltext: str, variables: dict = None):
+    """Parse YAML text and convert class strings to objects.
+    
+    Also handles mathematical expressions in curly braces {} and variable substitution.
+    
+    Args:
+        yamltext: The YAML text to parse
+        variables: Optional dictionary of variables to use in expressions
+    """
+    import re
+    import ast
+    import operator
+    
+    # Default variables that can be used in expressions
+    default_variables = {
+        'pi': 3.14159,
+        'e': 2.71828,
+    }
+    
+    # Merge with provided variables
+    if variables:
+        default_variables.update(variables)
+    
+    def safe_eval(expr: str, variables: dict = None) -> float:
+        """Safely evaluate mathematical expressions."""
+        if variables is None:
+            variables = {}
+            
+        # Define safe operators
+        operators = {
+            ast.Add: operator.add,
+            ast.Sub: operator.sub,
+            ast.Mult: operator.mul,
+            ast.Div: operator.truediv,
+            ast.Pow: operator.pow,
+            ast.USub: operator.neg,
+            ast.UAdd: operator.pos,
+        }
+        
+        def eval_node(node):
+            if isinstance(node, ast.Num):  # Numbers
+                return node.n
+            elif isinstance(node, ast.Constant):  # Constants (Python 3.8+)
+                return node.value
+            elif isinstance(node, ast.Name):  # Variables
+                if node.id in variables:
+                    return variables[node.id]
+                else:
+                    raise ValueError(f"Unknown variable: {node.id}")
+            elif isinstance(node, ast.BinOp):  # Binary operations
+                left = eval_node(node.left)
+                right = eval_node(node.right)
+                return operators[type(node.op)](left, right)
+            elif isinstance(node, ast.UnaryOp):  # Unary operations
+                operand = eval_node(node.operand)
+                return operators[type(node.op)](operand)
+            else:
+                raise ValueError(f"Unsupported expression type: {type(node)}")
+        
+        try:
+            # Parse the expression
+            tree = ast.parse(expr, mode='eval')
+            return eval_node(tree.body)
+        except Exception as e:
+            raise ValueError(f"Cannot evaluate expression '{expr}': {e}")
+    
+    def process_expressions(data, variables):
+        """Process mathematical expressions in curly braces and substitute variables."""
+        if isinstance(data, dict):
+            processed = {}
+            for key, value in data.items():
+                processed[key] = process_expressions(value, variables)
+            return processed
+        elif isinstance(data, list):
+            return [process_expressions(item, variables) for item in data]
+        elif isinstance(data, str):
+            # Look for expressions in curly braces
+            expr_pattern = r'\{([^}]+)\}'
+            matches = re.findall(expr_pattern, data)
+            
+            if matches:
+                result = data
+                for match in matches:
+                    try:
+                        # Evaluate the expression
+                        value = safe_eval(match, variables)
+                        # Replace the expression with the calculated value
+                        result = result.replace(f'{{{match}}}', str(value))
+                    except Exception as e:
+                        # If evaluation fails, leave the expression as is
+                        print(f"Warning: Could not evaluate expression '{match}': {e}")
+                        continue
+                
+                # Try to convert to number if the entire string is now numeric
+                try:
+                    if '.' in result:
+                        return float(result)
+                    else:
+                        return int(result)
+                except ValueError:
+                    return result
+            
+            return data
+        else:
+            return data
+    
     def map_cls_strings_to_objects(data):
         if isinstance(data, list):
             for index, item in enumerate(data):
@@ -53,7 +157,24 @@ def parseYAML(yamltext: str):
                     data[key] = map_cls_strings_to_objects(value)
         return data
 
+    # First, parse the YAML
     data = yaml.safe_load(yamltext)
+    
+    # Extract variables from the YAML if they exist
+    yaml_variables = {}
+    if isinstance(data, dict) and 'variables' in data:
+        yaml_variables = data.pop('variables')  # Remove variables section from main data
+        default_variables.update(yaml_variables)
+    elif isinstance(data, list):
+        # Check if first item is a variables definition
+        if data and isinstance(data[0], dict) and len(data[0]) == 1 and 'variables' in data[0]:
+            yaml_variables = data.pop(0)['variables']
+            default_variables.update(yaml_variables)
+    
+    # Process mathematical expressions
+    data = process_expressions(data, default_variables)
+    
+    # Then handle class strings
     return map_cls_strings_to_objects(data)
 
 

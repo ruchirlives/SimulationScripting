@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation Backend - YAML Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .form-container {
+            padding: 40px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .form-section h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #34495e;
+        }
+
+        input[type="file"], input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="file"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload-area {
+            position: relative;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .file-upload-area.dragover {
+            border-color: #667eea;
+            background: #e8f2ff;
+        }
+
+        .upload-icon {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .file-info {
+            margin-top: 10px;
+            padding: 8px;
+            background: #e8f5e8;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #2e7d32;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .response-area {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .response-area.show {
+            display: block;
+        }
+
+        .response-area pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .example-link {
+            display: inline-block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .example-link:hover {
+            text-decoration: underline;
+        }
+
+        .optional-label {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Simulation Backend</h1>
+            <p>Upload YAML files to run portfolio simulations</p>
+        </div>
+
+        <div class="form-container">
+            <form id="simulationForm" enctype="multipart/form-data">
+                <!-- Main Simulation File -->
+                <div class="form-section">
+                    <h3>📊 Main Simulation Configuration</h3>
+                    <div class="form-group">
+                        <label for="yaml_file">Simulation YAML File <span style="color: red;">*</span></label>
+                        <div class="file-upload-area" data-target="yaml_file">
+                            <div class="upload-icon">📁</div>
+                            <p>Click to select or drag & drop your simulation YAML file</p>
+                            <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required style="display: none;">
+                            <div class="file-info" id="yaml_file_info" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Optional Data Files -->
+                <div class="form-section">
+                    <h3>📋 Additional Data Files <span class="optional-label">(Optional)</span></h3>
+                    
+                    <div class="form-group">
+                        <label for="fcrdata_file">FCR Data YAML File</label>
+                        <div class="file-upload-area" data-target="fcrdata_file">
+                            <div class="upload-icon">📄</div>
+                            <p>Click to select or drag & drop FCR data YAML file</p>
+                            <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" style="display: none;">
+                            <div class="file-info" id="fcrdata_file_info" style="display: none;"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supportdata_file">Support Data YAML File</label>
+                        <div class="file-upload-area" data-target="supportdata_file">
+                            <div class="upload-icon">📄</div>
+                            <p>Click to select or drag & drop support data YAML file</p>
+                            <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" style="display: none;">
+                            <div class="file-info" id="supportdata_file_info" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Parameters -->
+                <div class="form-section">
+                    <h3>⚙️ Simulation Parameters</h3>
+                    <div class="form-group">
+                        <label for="steps">Number of Steps</label>
+                        <input type="number" id="steps" name="steps" value="12" min="1" max="120" 
+                               placeholder="Enter number of simulation steps">
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    🚀 Run Simulation
+                </button>
+            </form>
+
+            <div class="response-area" id="responseArea">
+                <h3>📈 Simulation Results</h3>
+                <div id="loadingIndicator" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Running simulation...</p>
+                </div>
+                <pre id="responseContent"></pre>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="/simulate/example" class="example-link" target="_blank">
+                    📖 View Example YAML Configuration
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // File upload handling
+        document.querySelectorAll('.file-upload-area').forEach(area => {
+            const input = area.querySelector('input[type="file"]');
+            const info = area.querySelector('.file-info');
+            
+            area.addEventListener('click', () => input.click());
+            
+            // Drag and drop
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('dragover');
+            });
+            
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('dragover');
+            });
+            
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('dragover');
+                
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    input.files = files;
+                    updateFileInfo(input, info);
+                }
+            });
+            
+            input.addEventListener('change', () => {
+                updateFileInfo(input, info);
+            });
+        });
+
+        function updateFileInfo(input, info) {
+            if (input.files.length > 0) {
+                const file = input.files[0];
+                info.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                info.style.display = 'block';
+            } else {
+                info.style.display = 'none';
+            }
+        }
+
+        // Form submission
+        document.getElementById('simulationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const submitBtn = document.getElementById('submitBtn');
+            const responseArea = document.getElementById('responseArea');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const responseContent = document.getElementById('responseContent');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Running...';
+            responseArea.classList.add('show');
+            loadingIndicator.style.display = 'block';
+            responseContent.style.display = 'none';
+            
+            try {
+                const response = await fetch('/simulate', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                // Display results
+                responseContent.textContent = JSON.stringify(result, null, 2);
+                responseContent.style.display = 'block';
+                
+                if (!response.ok) {
+                    responseContent.style.color = '#e74c3c';
+                } else {
+                    responseContent.style.color = '#2e7d32';
+                }
+                
+            } catch (error) {
+                responseContent.textContent = `Error: ${error.message}`;
+                responseContent.style.color = '#e74c3c';
+                responseContent.style.display = 'block';
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Run Simulation';
+                loadingIndicator.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

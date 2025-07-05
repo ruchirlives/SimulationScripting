@@ -2,6 +2,7 @@
 pytest
 
 Flask
+python-dotenv
 openai
 pandas
 simpy
