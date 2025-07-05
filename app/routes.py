@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for, session
 from flask_dance.contrib.google import google
+
 # Import the OAuth blueprint created in app.__init__
 from . import google_bp
 import logging
@@ -53,7 +54,7 @@ def safe_jsonify(data):
                 if math.isnan(obj) or math.isinf(obj):
                     return 0
                 return obj
-            elif hasattr(obj, 'item'):  # Handle numpy scalars
+            elif hasattr(obj, "item"):  # Handle numpy scalars
                 return clean_data(obj.item())
             else:
                 return obj
@@ -313,17 +314,16 @@ events:
     )
 
 
-@sim_bp.route("/", methods=["GET"])
-def index():
-    """Serve the simulation upload form."""
-    logging.info(f"Index route accessed. Google authorized: {google.authorized}")
-    
-    # Check if user is authenticated
+@root_bp.route("/", methods=["GET"])
+def home():
+    """Main entry point - redirect to simulation interface if authenticated."""
+    logging.info(f"Home route accessed - Google authorized: {google.authorized}")
+
     if not google.authorized:
         logging.info("User not authorized, redirecting to Google login")
         return redirect(url_for("google.login"))
-    
-    # Get user info
+
+    # Get user info for authenticated users
     user_info = None
     try:
         resp = google.get("/oauth2/v1/userinfo")
@@ -335,17 +335,9 @@ def index():
     except Exception as e:
         logging.error(f"Error getting user info: {e}")
         user_info = {"name": "User", "email": ""}
-    
+
     return render_template("index.html", user_info=user_info)
 
-@root_bp.route("/", methods=["GET"])
-def home():
-    logging.info(f"Home route accessed - Google authorized: {google.authorized}")
-    if not google.authorized:
-        logging.info("User not authorized, redirecting to Google login")
-        return redirect(url_for("google.login"))
-    logging.info("User authorized, redirecting to sim.index")
-    return redirect(url_for("sim.index"))
 
 @root_bp.route("/logout")
 def logout():
@@ -365,9 +357,10 @@ def logout():
     logging.info(f"After logout - Google authorized: {google.authorized}")
     logging.info(f"After logout - Session keys: {list(session.keys())}")
     logging.info("=== LOGOUT PROCESS COMPLETED ===")
-    
+
     # Redirect to confirmation page for debugging (change to root.home for production)
     return redirect(url_for("root.logout_confirm"))
+
 
 @sim_bp.route("/pivot", methods=["POST"])
 def simulate_pivot():
@@ -413,14 +406,18 @@ def simulate_pivot():
 
     return safe_jsonify(data)
 
+
 @root_bp.route("/debug-auth")
 def debug_auth():
     """Debug route to check authentication status."""
-    return jsonify({
-        "google_authorized": google.authorized,
-        "session_keys": list(session.keys()),
-        "google_token_exists": hasattr(google, 'token') and google.token is not None
-    })
+    return jsonify(
+        {
+            "google_authorized": google.authorized,
+            "session_keys": list(session.keys()),
+            "google_token_exists": hasattr(google, "token") and google.token is not None,
+        }
+    )
+
 
 @root_bp.route("/logout-confirm")
 def logout_confirm():
