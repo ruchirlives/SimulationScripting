@@ -23,33 +23,35 @@ class NaNSafeJSONEncoder(json.JSONEncoder):
     def iterencode(self, obj, _one_shot=False):
         """Iteratively encode object, handling NaN/inf values."""
         if isinstance(obj, dict):
-            obj = {
-                k: (0 if isinstance(v, float) and (math.isnan(v) or math.isinf(v)) else v)
-                for k, v in obj.items()
-            }
+            obj = {k: (0 if isinstance(v, float) and (math.isnan(v) or math.isinf(v)) else v) for k, v in obj.items()}
         elif isinstance(obj, list):
-            obj = [
-                0 if isinstance(item, float) and (math.isnan(item) or math.isinf(item)) else item
-                for item in obj
-            ]
+            obj = [0 if isinstance(item, float) and (math.isnan(item) or math.isinf(item)) else item for item in obj]
         elif isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
             obj = 0
         return super().iterencode(obj, _one_shot)
 
 
 def safe_jsonify(data):
-    """Safe jsonify that handles NaN values."""
+    """Safe jsonify that handles NaN values and mixed data types."""
     try:
         # First, recursively clean the data
         def clean_data(obj):
             if isinstance(obj, dict):
-                return {k: clean_data(v) for k, v in obj.items()}
+                # Convert all keys to strings to avoid comparison issues
+                cleaned_dict = {}
+                for k, v in obj.items():
+                    # Convert numeric keys to strings
+                    key = str(k) if isinstance(k, (int, float)) else k
+                    cleaned_dict[key] = clean_data(v)
+                return cleaned_dict
             elif isinstance(obj, list):
                 return [clean_data(item) for item in obj]
             elif isinstance(obj, float):
                 if math.isnan(obj) or math.isinf(obj):
                     return 0
                 return obj
+            elif hasattr(obj, 'item'):  # Handle numpy scalars
+                return clean_data(obj.item())
             else:
                 return obj
 
@@ -114,13 +116,7 @@ def simulate_run():
     logger.debug("=== SIMULATION REQUEST STARTED ===")
     logger.debug(f"Request method: {request.method}")
     logger.debug(f"Request files: {list(request.files.keys())}")
-    logger.debug(
-        f"Request form: {dict(request.form)}"
-    )  # BREAKPOINT: This is where you should set your VS Code breakpoint
-    print("🔍 DEBUG: simulate_run function called!")  # This will show in console
-    breakpoint_here = True  # SET YOUR BREAKPOINT ON THIS LINE IN VS CODE
-
-    # Terminal debugging - this WILL stop execution
+    logger.debug(f"Request form: {dict(request.form)}")
 
     # Check if a YAML file was uploaded
     if "yaml_file" in request.files:
@@ -213,6 +209,26 @@ def simulate_run():
     # Run the simulation
     try:
         result = run_simulation(events, steps=steps)
+
+        # Add pivot table data for better visualization
+        if "budget" in result and result["budget"]:
+            from sim.utils import pivotbudget
+            import pandas as pd
+
+            try:
+                # Convert budget data to DataFrame
+                budget_df = pd.DataFrame(result["budget"])
+
+                # Apply pivot transformation
+                pivot_df = pivotbudget(budget_df)
+
+                # Convert back to dict format for JSON serialization
+                result["budget_pivot"] = pivot_df.reset_index().to_dict("records")
+
+            except Exception as e:
+                logger.error(f"Error creating pivot table: {e}")
+                result["budget_pivot_error"] = str(e)
+
         return safe_jsonify(result)
     except Exception as e:
         return jsonify({"error": f"Simulation failed: {str(e)}"}), 500
@@ -283,7 +299,10 @@ events:
         {
             "example_yaml": example_yaml.strip(),
             "description": "Example YAML configuration with variables and mathematical expressions",
-            "usage": "Save this as a .yaml file and upload to /simulate. Note: expressions like {variable*0.1} must be quoted as strings.",
+            "usage": (
+                "Save this as a .yaml file and upload to /simulate. "
+                "Note: expressions like {variable*0.1} must be quoted as strings."
+            ),
         }
     )
 
@@ -298,3 +317,48 @@ def index():
 def home():
     """Redirect to the simulation interface."""
     return redirect(url_for("sim.index"))
+
+
+@sim_bp.route("/pivot", methods=["POST"])
+def simulate_pivot():
+    """Run a portfolio simulation and return pivot table results.
+
+    Same as /simulate but returns budget data in pivot table format for easier visualization.
+    """
+    # Reuse the same logic as simulate_run
+    logger.debug("=== PIVOT SIMULATION REQUEST STARTED ===")
+
+    # Get the simulation result first
+    result = simulate_run()
+
+    # If it's an error response, return it as-is
+    if isinstance(result, tuple) and len(result) == 2:
+        return result
+
+    # Extract the JSON data from the response
+    if hasattr(result, "get_json"):
+        data = result.get_json()
+    else:
+        data = result.json if hasattr(result, "json") else result
+
+    if "budget" in data:
+        from sim.utils import pivotbudget
+        import pandas as pd
+
+        try:
+            # Convert budget data to DataFrame
+            budget_df = pd.DataFrame(data["budget"])
+
+            # Apply pivot transformation
+            pivot_df = pivotbudget(budget_df)
+
+            # Convert back to dict format
+            pivot_data = pivot_df.reset_index().to_dict("records")
+
+            # Update the result with pivot data
+            data["budget_pivot"] = pivot_data
+        except Exception as e:
+            logger.error(f"Error creating pivot table: {e}")
+            data["budget_pivot_error"] = str(e)
+
+    return safe_jsonify(data)

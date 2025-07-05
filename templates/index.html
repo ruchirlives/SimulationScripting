@@ -204,6 +204,129 @@
             font-size: 0.9rem;
             font-weight: normal;
         }
+
+        /* Tab Styles */
+        .tab-container {
+            margin-top: 20px;
+        }
+
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            background: #f0f4ff;
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Table Styles */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            background: white;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .results-table th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #ddd;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .results-table td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+        }
+
+        .results-table tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        .results-table tr:hover {
+            background: #f0f4ff;
+        }
+
+        /* Number formatting */
+        .number-cell {
+            text-align: right;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+        }
+
+        .currency-cell {
+            color: #2e7d32;
+        }
+
+        .negative-currency {
+            color: #d32f2f;
+        }
+
+        /* Responsive table */
+        @media (max-width: 768px) {
+            .tab-nav {
+                flex-direction: column;
+            }
+            
+            .tab-btn {
+                text-align: center;
+                border-bottom: none;
+                border-left: 3px solid transparent;
+            }
+            
+            .tab-btn.active {
+                border-left-color: #667eea;
+                border-bottom-color: transparent;
+            }
+            
+            .results-table th,
+            .results-table td {
+                padding: 8px 4px;
+                font-size: 0.8rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -275,7 +398,57 @@
                     <div class="spinner"></div>
                     <p>Running simulation...</p>
                 </div>
-                <pre id="responseContent"></pre>
+                
+                <!-- Tab Navigation -->
+                <div class="tab-container" id="tabContainer" style="display: none;">
+                    <div class="tab-nav">
+                        <button class="tab-btn active" onclick="showTab('budget-table')">📊 Budget Table</button>
+                        <button class="tab-btn" onclick="showTab('projects-table')">🏗️ Projects</button>
+                        <button class="tab-btn" onclick="showTab('transactions-table')">💰 Transactions</button>
+                        <button class="tab-btn" onclick="showTab('raw-json')">📄 Raw JSON</button>
+                    </div>
+                    
+                    <!-- Budget Table Tab -->
+                    <div id="budget-table" class="tab-content active">
+                        <div class="table-container">
+                            <table id="budgetTable" class="results-table">
+                                <thead>
+                                    <tr id="budgetTableHeader"></tr>
+                                </thead>
+                                <tbody id="budgetTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Projects Table Tab -->
+                    <div id="projects-table" class="tab-content">
+                        <div class="table-container">
+                            <table id="projectsTable" class="results-table">
+                                <thead>
+                                    <tr id="projectsTableHeader"></tr>
+                                </thead>
+                                <tbody id="projectsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Transactions Table Tab -->
+                    <div id="transactions-table" class="tab-content">
+                        <div class="table-container">
+                            <table id="transactionsTable" class="results-table">
+                                <thead>
+                                    <tr id="transactionsTableHeader"></tr>
+                                </thead>
+                                <tbody id="transactionsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Raw JSON Tab -->
+                    <div id="raw-json" class="tab-content">
+                        <pre id="responseContent"></pre>
+                    </div>
+                </div>
             </div>
 
             <div style="text-align: center; margin-top: 30px;">
@@ -330,6 +503,119 @@
             }
         }
 
+        // Tab handling
+        function showTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabId).classList.add('active');
+            
+            // Find and activate the correct button
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => {
+                if (btn.getAttribute('onclick').includes(tabId)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Table rendering functions
+        function formatCurrency(value) {
+            if (typeof value === 'number') {
+                return new Intl.NumberFormat('en-GB', {
+                    style: 'currency',
+                    currency: 'GBP',
+                    minimumFractionDigits: 2
+                }).format(value);
+            }
+            return value;
+        }
+
+        function formatNumber(value) {
+            if (typeof value === 'number') {
+                return new Intl.NumberFormat('en-GB', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(value);
+            }
+            return value;
+        }
+
+        function renderTable(tableId, data, formatters = {}) {
+            const table = document.getElementById(tableId);
+            const headerRow = document.getElementById(tableId + 'Header');
+            const tbody = document.getElementById(tableId + 'Body');
+            
+            if (!data || data.length === 0) {
+                headerRow.innerHTML = '<th>No data available</th>';
+                tbody.innerHTML = '';
+                return;
+            }
+            
+            // Get all unique keys from the data
+            const keys = [...new Set(data.flatMap(Object.keys))];
+            
+            // Create header
+            headerRow.innerHTML = keys.map(key => 
+                `<th>${key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}</th>`
+            ).join('');
+            
+            // Create rows
+            tbody.innerHTML = data.map(row => {
+                return '<tr>' + keys.map(key => {
+                    let value = row[key] || '';
+                    let cellClass = '';
+                    let originalValue = value; // Keep original for comparison
+                    
+                    // Apply formatters
+                    if (formatters[key]) {
+                        value = formatters[key](value);
+                        cellClass = 'number-cell';
+                        if (key.includes('budget') || key.includes('amount') || key.includes('cost')) {
+                            cellClass += ' currency-cell';
+                            // Check original numeric value, not formatted string
+                            if (typeof originalValue === 'number' && originalValue < 0) {
+                                cellClass += ' negative-currency';
+                            }
+                        }
+                    }
+                    
+                    return `<td class="${cellClass}">${value}</td>`;
+                }).join('') + '</tr>';
+            }).join('');
+        }
+
+        function createPivotTable(budgetData) {
+            if (!budgetData || budgetData.length === 0) return [];
+            
+            // Group by item
+            const grouped = {};
+            budgetData.forEach(row => {
+                const item = row.item || 'Unknown';
+                if (!grouped[item]) {
+                    grouped[item] = {
+                        item: item,
+                        description: row.description || '',
+                        type: row.type || ''
+                    };
+                }
+                
+                // Add step-based budget columns
+                const step = `Step ${row.step || 0}`;
+                grouped[item][step] = (grouped[item][step] || 0) + (row.budget || 0);
+            });
+            
+            return Object.values(grouped);
+        }
+
         // Form submission
         document.getElementById('simulationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -337,6 +623,7 @@
             const formData = new FormData(e.target);
             const submitBtn = document.getElementById('submitBtn');
             const responseArea = document.getElementById('responseArea');
+            const tabContainer = document.getElementById('tabContainer');
             const loadingIndicator = document.getElementById('loadingIndicator');
             const responseContent = document.getElementById('responseContent');
             
@@ -344,8 +631,8 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '⏳ Running...';
             responseArea.classList.add('show');
+            tabContainer.style.display = 'none';
             loadingIndicator.style.display = 'block';
-            responseContent.style.display = 'none';
             
             try {
                 const response = await fetch('/simulate', {
@@ -355,20 +642,83 @@
                 
                 const result = await response.json();
                 
-                // Display results
-                responseContent.textContent = JSON.stringify(result, null, 2);
-                responseContent.style.display = 'block';
-                
-                if (!response.ok) {
-                    responseContent.style.color = '#e74c3c';
-                } else {
+                if (response.ok) {
+                    // Show tab container
+                    tabContainer.style.display = 'block';
+                    
+                    // Render tables
+                    const budgetFormatters = {
+                        budget: formatCurrency,
+                        step: formatNumber
+                    };
+                    
+                    const projectFormatters = {
+                        budget: formatCurrency,
+                        cost: formatCurrency,
+                        income: formatCurrency,
+                        term: formatNumber
+                    };
+                    
+                    const transactionFormatters = {
+                        amount: formatCurrency,
+                        balance: formatCurrency,
+                        date: formatNumber
+                    };
+                    
+                    // Use pivot data if available, otherwise create it from budget data
+                    let budgetTableData;
+                    if (result.budget_pivot && result.budget_pivot.length > 0) {
+                        budgetTableData = result.budget_pivot;
+                        
+                        // Create formatters for step columns
+                        const pivotFormatters = {};
+                        if (budgetTableData.length > 0) {
+                            Object.keys(budgetTableData[0]).forEach(key => {
+                                if (key.match(/^\d+$/) || key.includes('Step')) {
+                                    pivotFormatters[key] = formatCurrency;
+                                }
+                            });
+                        }
+                        
+                        renderTable('budgetTable', budgetTableData, pivotFormatters);
+                    } else {
+                        // Fallback: create pivot table from budget data
+                        budgetTableData = createPivotTable(result.budget || []);
+                        
+                        // Find all step columns for pivot table
+                        const stepColumns = {};
+                        (result.budget || []).forEach(row => {
+                            const step = `Step ${row.step || 0}`;
+                            stepColumns[step] = formatCurrency;
+                        });
+                        
+                        const pivotFormatters = {
+                            ...stepColumns
+                        };
+                        
+                        renderTable('budgetTable', budgetTableData, pivotFormatters);
+                    }
+                    
+                    renderTable('projectsTable', result.projects || [], projectFormatters);
+                    renderTable('transactionsTable', result.transactions || [], transactionFormatters);
+                    
+                    // Show raw JSON
+                    responseContent.textContent = JSON.stringify(result, null, 2);
                     responseContent.style.color = '#2e7d32';
+                    
+                } else {
+                    // Show error in raw JSON tab
+                    tabContainer.style.display = 'block';
+                    showTab('raw-json');
+                    responseContent.textContent = JSON.stringify(result, null, 2);
+                    responseContent.style.color = '#e74c3c';
                 }
                 
             } catch (error) {
+                tabContainer.style.display = 'block';
+                showTab('raw-json');
                 responseContent.textContent = `Error: ${error.message}`;
                 responseContent.style.color = '#e74c3c';
-                responseContent.style.display = 'block';
             } finally {
                 // Reset button state
                 submitBtn.disabled = false;
