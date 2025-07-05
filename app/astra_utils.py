@@ -1,7 +1,22 @@
-"""Utility functions for Astra database operations."""
+"""Utility functions for Astra database operations.
+
+This module uses the DataAPIClient API from astrapy.
+Usage example:
+    client, collection = init_astra_db(
+        token="AstraCS:xxx",
+        endpoint="https://<db-id>-<region>.apps.astra.datastax.com",
+        collection="my_collection"
+    )
+    collection.insert_one({"hello": "world"})
+
+Environment variables:
+    ASTRA_DB_TOKEN: Your Astra DB token (AstraCS:...)
+    ASTRA_DB_ENDPOINT: Your database API endpoint
+    ASTRA_DB_DATABASE: Default database name (optional)
+"""
 
 import os
-from astrapy.db import AstraDB
+from astrapy import DataAPIClient
 
 # Month names for date conversion
 MONTHS = [
@@ -24,18 +39,35 @@ def init_astra_db(
     token: str | None = None,
     endpoint: str | None = None,
     *,
-    namespace: str = "default_keyspace",
+    database: str | None = None,
     collection: str | None = None
 ):
-    """Initialise and return an :class:`AstraDB` client and optionally a collection."""
+    """Initialise and return a :class:`DataAPIClient` and optionally a collection."""
     token = token or os.getenv("ASTRA_DB_TOKEN")
     endpoint = endpoint or os.getenv("ASTRA_DB_ENDPOINT")
+    database = database or os.getenv("ASTRA_DB_DATABASE")
     if not token or not endpoint:
         raise ValueError("ASTRA_DB_TOKEN and ASTRA_DB_ENDPOINT must be provided")
 
-    astradb = AstraDB(token=token, api_endpoint=endpoint, namespace=namespace)
-    coll = astradb.collection(collection) if collection else None
-    return astradb, coll
+    client = DataAPIClient(token=token)
+    db = client.get_database_by_api_endpoint(endpoint)
+    
+    if collection:
+        coll = db.get_collection(collection)
+        return client, coll
+    else:
+        return client, db
+
+
+def get_database(client: DataAPIClient, endpoint: str):
+    """Get a database instance from the DataAPIClient."""
+    return client.get_database_by_api_endpoint(endpoint)
+
+
+def get_collection(client: DataAPIClient, endpoint: str, collection: str):
+    """Get a collection instance from the DataAPIClient."""
+    db = client.get_database_by_api_endpoint(endpoint)
+    return db.get_collection(collection)
 
 
 def getDate(date: str) -> dict:

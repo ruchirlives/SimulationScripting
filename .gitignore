@@ -1,0 +1,37 @@
+# Add usual python files to ignore
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.pyd
+*.egg
+*.egg-info/
+dist/
+build/
+*.whl
+*.db
+*.sqlite
+*.log
+*.env
+*.venv
+# Jupyter notebooks
+*.ipynb_checkpoints
+# VS Code settings
+.vscode/
+# Pytest cache
+.cache/
+# Coverage reports
+.coverage
+# PyCharm settings
+.idea/
+# Local configuration files
+*.local
+# Temporary files
+*.tmp
+*.temp
+# Backup files
+*~
+# System files
+.DS_Store
+# Ignore virtual environments
+venv/
