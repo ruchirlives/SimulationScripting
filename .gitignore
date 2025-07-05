@@ -35,3 +35,6 @@ build/
 .DS_Store
 # Ignore virtual environments
 venv/
+# Yaml files
+*.yaml
+*.yml
