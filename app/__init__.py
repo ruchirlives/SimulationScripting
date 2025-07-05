@@ -1,6 +1,6 @@
 from flask import Flask
 
-from .routes import openai_bp, astra_bp
+from .routes import openai_bp, astra_bp, sim_bp
 
 
 def create_app() -> Flask:
@@ -8,6 +8,7 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.register_blueprint(openai_bp)
     app.register_blueprint(astra_bp)
+    app.register_blueprint(sim_bp)
     return app
 
 
