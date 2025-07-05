@@ -1,0 +1,16 @@
+
+pytest
+Flask
+Flask-Dance
+python-dotenv
+openai
+pandas
+simpy
+neo4j
+neomodel
+astrapy
+beautifulsoup4
+python-docx
+PyYAML
+requests
+

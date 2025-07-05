@@ -1,0 +1,78 @@
+        <div class="response-area mt-8 p-5 bg-gray-50 rounded-lg hidden" id="responseArea">
+          <h3 class="text-xl font-semibold mb-4">📈 Simulation Results</h3>
+          <div id="loadingIndicator" class="text-center p-5 hidden">
+            <div class="w-8 h-8 border-4 border-gray-200 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-600">Running simulation...</p>
+          </div>
+
+          <!-- Tab Navigation -->
+          <div class="tab-container mt-5 hidden" id="tabContainer">
+            <div class="flex border-b-2 border-gray-200 mb-5 gap-3 flex-wrap">
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500 active border-b-indigo-500 text-indigo-500 bg-blue-50"
+                onclick="showTab('budget-table')"
+              >
+                📊 Budget Table
+              </button>
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500"
+                onclick="showTab('projects-table')"
+              >
+                🏗️ Projects
+              </button>
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500"
+                onclick="showTab('transactions-table')"
+              >
+                💰 Transactions
+              </button>
+              <button
+                class="tab-btn bg-transparent border-0 p-3 px-5 cursor-pointer border-b-4 border-transparent transition-all duration-300 font-medium text-gray-600 text-sm hover:bg-blue-50 hover:text-indigo-500"
+                onclick="showTab('raw-json')"
+              >
+                📄 Raw JSON
+              </button>
+            </div>
+
+            <!-- Budget Table Tab -->
+            <div id="budget-table" class="tab-content block">
+              <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table id="budgetTable" class="w-full border-collapse text-sm">
+                  <thead>
+                    <tr id="budgetTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
+                  </thead>
+                  <tbody id="budgetTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Projects Table Tab -->
+            <div id="projects-table" class="tab-content hidden">
+              <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table id="projectsTable" class="w-full border-collapse text-sm">
+                  <thead>
+                    <tr id="projectsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
+                  </thead>
+                  <tbody id="projectsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Transactions Table Tab -->
+            <div id="transactions-table" class="tab-content hidden">
+              <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white">
+                <table id="transactionsTable" class="w-full border-collapse text-sm">
+                  <thead>
+                    <tr id="transactionsTableHeader" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white"></tr>
+                  </thead>
+                  <tbody id="transactionsTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Raw JSON Tab -->
+            <div id="raw-json" class="tab-content hidden">
+              <pre id="responseContent" class="bg-slate-800 text-gray-200 p-4 rounded-md overflow-x-auto text-sm"></pre>
+            </div>
+          </div>
+        </div>

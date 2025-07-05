@@ -1,0 +1,41 @@
+# Ignore Python cache and virtual envs
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+
+# Ignore Jupyter notebooks
+*.ipynb
+notebooks/
+experiments/
+research/
+
+# Ignore data files
+*.csv
+*.tsv
+*.json
+*.xlsx
+*.h5
+*.pkl
+*.zip
+*.tar.gz
+*.yml
+*.yaml
+
+# Ignore git and GitHub config
+.git/
+.github/
+
+# Ignore IDE/editor files
+.vscode/
+.idea/
+
+# Ignore tests if not needed in build
+tests/
+
+# Ignore logs and temporary files
+*.log
+*.tmp
+.DS_Store
