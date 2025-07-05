@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request, render_template, redirect, url_for
+from flask import Blueprint, jsonify, request, render_template, redirect, url_for, session
 from flask_dance.contrib.google import google
 import logging
 import json
@@ -314,8 +314,11 @@ events:
 @sim_bp.route("/", methods=["GET"])
 def index():
     """Serve the simulation upload form."""
+    logging.info(f"Index route accessed. Google authorized: {google.authorized}")
+    
     # Check if user is authenticated
     if not google.authorized:
+        logging.info("User not authorized, redirecting to Google login")
         return redirect(url_for("google.login"))
     
     # Get user info
@@ -324,6 +327,9 @@ def index():
         resp = google.get("/oauth2/v1/userinfo")
         if resp.ok:
             user_info = resp.json()
+            logging.info(f"User info retrieved: {user_info.get('name', 'Unknown')}")
+        else:
+            logging.error(f"Failed to get user info: {resp.status_code}")
     except Exception as e:
         logging.error(f"Error getting user info: {e}")
         user_info = {"name": "User", "email": ""}
@@ -332,20 +338,40 @@ def index():
 
 @root_bp.route("/", methods=["GET"])
 def home():
+    logging.info(f"Home route accessed - Google authorized: {google.authorized}")
     if not google.authorized:
+        logging.info("User not authorized, redirecting to Google login")
         return redirect(url_for("google.login"))
+    logging.info("User authorized, redirecting to sim.index")
     return redirect(url_for("sim.index"))
 
 @root_bp.route("/logout")
 def logout():
     """Logout the user and clear the session."""
-    if google.authorized:
-        # Revoke the token to properly log out
-        token = google.token
-        if token:
-            # Clear the token from the session
-            del google.token
-    return redirect(url_for("sim.index"))
+    logging.info("=== LOGOUT PROCESS STARTED ===")
+    logging.info(f"Before logout - Google authorized: {google.authorized}")
+    logging.info(f"Before logout - Session keys: {list(session.keys())}")
+    
+    # Clear the entire session first
+    session.clear()
+    logging.info("Session cleared")
+    
+    # Force clear any flask-dance tokens
+    try:
+        # Clear all flask-dance related session data
+        for key in list(session.keys()):
+            if 'google' in key.lower() or 'oauth' in key.lower():
+                del session[key]
+                logging.info(f"Cleared session key: {key}")
+    except Exception as e:
+        logging.error(f"Error clearing oauth session data: {e}")
+    
+    logging.info(f"After logout - Google authorized: {google.authorized}")
+    logging.info(f"After logout - Session keys: {list(session.keys())}")
+    logging.info("=== LOGOUT PROCESS COMPLETED ===")
+    
+    # Redirect to confirmation page for debugging (change to root.home for production)
+    return redirect(url_for("root.logout_confirm"))
 
 @sim_bp.route("/pivot", methods=["POST"])
 def simulate_pivot():
@@ -390,3 +416,28 @@ def simulate_pivot():
             data["budget_pivot_error"] = str(e)
 
     return safe_jsonify(data)
+
+@root_bp.route("/debug-auth")
+def debug_auth():
+    """Debug route to check authentication status."""
+    return jsonify({
+        "google_authorized": google.authorized,
+        "session_keys": list(session.keys()),
+        "google_token_exists": hasattr(google, 'token') and google.token is not None
+    })
+
+@root_bp.route("/logout-confirm")
+def logout_confirm():
+    """Confirmation page showing logout was successful."""
+    return f"""
+    <html>
+    <head><title>Logged Out</title></head>
+    <body style="font-family: Arial; text-align: center; padding: 50px;">
+        <h1>✅ Logout Successful</h1>
+        <p>You have been successfully logged out.</p>
+        <p>Google Authorized: {google.authorized}</p>
+        <p>Session Keys: {list(session.keys())}</p>
+        <a href="/" style="color: blue;">← Back to Home</a>
+    </body>
+    </html>
+    """
