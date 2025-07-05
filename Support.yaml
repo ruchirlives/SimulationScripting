@@ -1,5 +1,0 @@
-variables:
-  daysperunit: 7
-projects:
-  - name: Example
-    daysperunit: 7
