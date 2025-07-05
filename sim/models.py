@@ -33,9 +33,9 @@ class Worker:
         """Get cost breakdown for a specific month."""
         salary = self.getMonthSalary(month)
         data = [
-            {"step": month, "item": "salary", "budget": salary, "type": "1. Staffing"},
-            {"step": month, "item": "ni", "budget": self.getNI(salary), "type": "1. Staffing"},
-            {"step": month, "item": "pension", "budget": self.getPension(salary, self.fte), "type": "1. Staffing"},
+            {"step": month, "item": "salary", "budget": salary, "type": "1. Staffing", "description": "Monthly salary"},
+            {"step": month, "item": "ni", "budget": self.getNI(salary), "type": "1. Staffing", "description": "National Insurance"},
+            {"step": month, "item": "pension", "budget": self.getPension(salary, self.fte), "type": "1. Staffing", "description": "Pension contribution"},
         ]
         return data
 

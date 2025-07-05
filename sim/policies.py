@@ -51,7 +51,13 @@ class FullCostRecovery(Policy):
                 pass
             if frequency == "annual":
                 cost = cost if step % 12 == 0 else 0
-            register.append({"step": step, "item": itemname, "budget": cost, "type": "3. FullCostRecovery"})
+            register.append({
+                "step": step, 
+                "item": itemname, 
+                "budget": cost, 
+                "type": "3. FullCostRecovery",
+                "description": f"FCR: {itemname}"
+            })
         return register
 
     def calcfcr(self, person, step: int):

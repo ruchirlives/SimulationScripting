@@ -1,8 +1,64 @@
 from flask import Blueprint, jsonify, request, render_template, redirect, url_for
+import logging
+import json
+import math
 
 from .openai_utils import summarize
 from .astra_utils import update_record
 from .simulation_utils import run_simulation
+
+
+class NaNSafeJSONEncoder(json.JSONEncoder):
+    """Custom JSON encoder that converts NaN and infinity to safe values."""
+
+    def encode(self, obj):
+        """Encode object, converting NaN/inf to safe values."""
+        if isinstance(obj, float):
+            if math.isnan(obj):
+                return "0"
+            elif math.isinf(obj):
+                return "0"
+        return super().encode(obj)
+
+    def iterencode(self, obj, _one_shot=False):
+        """Iteratively encode object, handling NaN/inf values."""
+        if isinstance(obj, dict):
+            obj = {
+                k: (0 if isinstance(v, float) and (math.isnan(v) or math.isinf(v)) else v)
+                for k, v in obj.items()
+            }
+        elif isinstance(obj, list):
+            obj = [
+                0 if isinstance(item, float) and (math.isnan(item) or math.isinf(item)) else item
+                for item in obj
+            ]
+        elif isinstance(obj, float) and (math.isnan(obj) or math.isinf(obj)):
+            obj = 0
+        return super().iterencode(obj, _one_shot)
+
+
+def safe_jsonify(data):
+    """Safe jsonify that handles NaN values."""
+    try:
+        # First, recursively clean the data
+        def clean_data(obj):
+            if isinstance(obj, dict):
+                return {k: clean_data(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [clean_data(item) for item in obj]
+            elif isinstance(obj, float):
+                if math.isnan(obj) or math.isinf(obj):
+                    return 0
+                return obj
+            else:
+                return obj
+
+        cleaned_data = clean_data(data)
+        return jsonify(cleaned_data)
+    except Exception as e:
+        logger.error(f"Error in safe_jsonify: {e}")
+        return jsonify({"error": "Internal error processing response"}), 500
+
 
 openai_bp = Blueprint("openai", __name__, url_prefix="/openai")
 astra_bp = Blueprint("astra", __name__, url_prefix="/astra")
@@ -10,6 +66,10 @@ sim_bp = Blueprint("sim", __name__, url_prefix="/simulate")
 
 # Create a root blueprint for the main routes
 root_bp = Blueprint("root", __name__)
+
+# Set up debug logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 @openai_bp.route("/summarize", methods=["POST"])
@@ -50,6 +110,18 @@ def simulate_run():
     For backward compatibility, fcrdata and supportdata can also be provided
     as JSON strings in form fields.
     """
+
+    logger.debug("=== SIMULATION REQUEST STARTED ===")
+    logger.debug(f"Request method: {request.method}")
+    logger.debug(f"Request files: {list(request.files.keys())}")
+    logger.debug(
+        f"Request form: {dict(request.form)}"
+    )  # BREAKPOINT: This is where you should set your VS Code breakpoint
+    print("🔍 DEBUG: simulate_run function called!")  # This will show in console
+    breakpoint_here = True  # SET YOUR BREAKPOINT ON THIS LINE IN VS CODE
+
+    # Terminal debugging - this WILL stop execution
+
     # Check if a YAML file was uploaded
     if "yaml_file" in request.files:
         yaml_file = request.files["yaml_file"]
@@ -141,7 +213,7 @@ def simulate_run():
     # Run the simulation
     try:
         result = run_simulation(events, steps=steps)
-        return jsonify(result)
+        return safe_jsonify(result)
     except Exception as e:
         return jsonify({"error": f"Simulation failed: {str(e)}"}), 500
 
@@ -150,59 +222,68 @@ def simulate_run():
 def get_example_yaml():
     """Get an example YAML configuration for simulations."""
     example_yaml = """
-# Example simulation configuration
-- name: "Project Alpha"
-  time: 0
-  term: 12
-  budget: 100000
-  staffing:
-    - name: "Alice Smith"
-      position: "Project Manager"
-      salary: 50000
-      fte: 1.0
-      linemanagerrate: 400
-    - name: "Bob Johnson"
-      position: "Developer"
-      salary: 45000
-      fte: 0.8
-  directcosts:
-    - item: "Equipment"
-      cost: 5000
-      frequency: "oneoff"
-      step: 0
-      description: "Initial equipment purchase"
-    - item: "Office rent"
-      cost: 2000
-      frequency: "monthly"
-      description: "Monthly office rental"
-  policies:
-    - policy: "Grant"
-      fund: "Innovation Fund"
-      amount: 25000
-      step: 0
+# Example simulation configuration using root-level dictionary format
+variables:
+  monthly_rent: 2000
+  equipment_budget: 5000
 
-- name: "Project Beta"
-  time: 3
-  term: 8
-  budget: 75000
-  staffing:
-    - name: "Carol Davis"
-      position: "Analyst"
-      salary: 40000
-      fte: 1.0
-  directcosts:
-    - item: "Software licenses"
-      cost: 1500
-      frequency: "annual"
-      step: 0
-      description: "Annual software licensing"
+events:
+  - name: "Project Alpha"
+    time: 0
+    term: 12
+    budget: 100000
+    staffing:
+      - name: "Alice Smith"
+        position: "Project Manager"
+        salary: 50000
+        fte: 1.0
+        linemanagerrate: 400
+      - name: "Bob Johnson"
+        position: "Developer"
+        salary: 45000
+        fte: 0.8
+    directcosts:
+      - item: "Equipment"
+        cost: "{equipment_budget}"
+        frequency: "oneoff"
+        step: 0
+        description: "Initial equipment purchase"
+      - item: "Office rent"
+        cost: "{monthly_rent}"
+        frequency: "monthly"
+        description: "Monthly office rental"
+      - item: "Utilities"
+        cost: "{monthly_rent * 0.1}"
+        frequency: "monthly"
+        description: "Utilities (10% of rent)"
+    policies:
+      - policy: "Grant"
+        fund: "Innovation Fund"
+        amount: 25000
+        step: 0
+
+  - name: "Project Beta"
+    time: 3
+    term: 8
+    budget: 75000
+    staffing:
+      - name: "Carol Davis"
+        position: "Analyst"
+        salary: 40000
+        fte: 1.0
+    directcosts:
+      - item: "Software licenses"
+        cost: 1500
+        frequency: "annual"
+        step: 0
+        description: "Annual software licensing"
 """
 
     return jsonify(
         {
             "example_yaml": example_yaml.strip(),
-            "description": "Example YAML configuration with two projects",
-            "usage": "Save this as a .yaml file and upload to /simulate",
+            "description": "Example YAML configuration with variables and mathematical expressions",
+            "usage": "Save this as a .yaml file and upload to /simulate. Note: expressions like {variable*0.1} must be quoted as strings.",
         }
     )
 
