@@ -7,11 +7,12 @@
               <div
                 class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50"
                 data-target="yaml_file"
-              >
-                <div class="text-2xl text-indigo-500 mb-3">📁</div>
-                <p class="text-gray-600">Click to select or drag & drop your simulation YAML file</p>
-                <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required class="hidden" />
-                <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="yaml_file_info"></div>
+              >              <div class="text-2xl text-indigo-500 mb-3">📁</div>
+              <p class="text-gray-600">Click to select or drag & drop your simulation YAML file</p>
+              <input type="file" id="yaml_file" name="yaml_file" accept=".yaml,.yml" required class="hidden" />
+              <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="yaml_file_info">
+                <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="yaml_file">✕ Clear</button>
+              </div>
               </div>
             </div>
           </div>
@@ -27,11 +28,12 @@
               <div
                 class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50"
                 data-target="fcrdata_file"
-              >
-                <div class="text-2xl text-indigo-500 mb-3">📄</div>
-                <p class="text-gray-600">Click to select or drag & drop FCR data YAML file</p>
-                <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" class="hidden" />
-                <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="fcrdata_file_info"></div>
+              >              <div class="text-2xl text-indigo-500 mb-3">📄</div>
+              <p class="text-gray-600">Click to select or drag & drop FCR data YAML file</p>
+              <input type="file" id="fcrdata_file" name="fcrdata_file" accept=".yaml,.yml" class="hidden" />
+              <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="fcrdata_file_info">
+                <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="fcrdata_file">✕ Clear</button>
+              </div>
               </div>
             </div>
 
@@ -40,11 +42,12 @@
               <div
                 class="file-upload-area relative border-2 border-dashed border-gray-300 rounded-lg p-5 text-center transition-all duration-300 cursor-pointer hover:border-indigo-500 hover:bg-blue-50"
                 data-target="supportdata_file"
-              >
-                <div class="text-2xl text-indigo-500 mb-3">📄</div>
-                <p class="text-gray-600">Click to select or drag & drop support data YAML file</p>
-                <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" class="hidden" />
-                <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="supportdata_file_info"></div>
+              >              <div class="text-2xl text-indigo-500 mb-3">📄</div>
+              <p class="text-gray-600">Click to select or drag & drop support data YAML file</p>
+              <input type="file" id="supportdata_file" name="supportdata_file" accept=".yaml,.yml" class="hidden" />
+              <div class="file-info mt-3 p-2 bg-green-100 rounded text-sm text-green-700 hidden" id="supportdata_file_info">
+                <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="supportdata_file">✕ Clear</button>
+              </div>
               </div>
             </div>
           </div>

@@ -60,36 +60,58 @@
                           console.log(`Found stored file: ${id}, ${data.name}, ${data.content ? data.content.length + ' bytes' : 'missing content'}`);
                           const area = document.querySelector(`.file-upload-area[data-target="${id}"]`);
                           const info = document.getElementById(id + '_info');
-                          info.textContent = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB)`;
-                          info.classList.remove('hidden');
-                          area.classList.add('border-indigo-500', 'bg-indigo-50');
+                          
+                          if (info) {
+                              info.innerHTML = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB) <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="${id}">✕ Clear</button>`;
+                              info.classList.remove('hidden');
+                              
+                              // Add event listener to the clear button
+                              const clearBtn = info.querySelector('.clear-file');
+                              if (clearBtn) {
+                                  clearBtn.addEventListener('click', (e) => {
+                                      e.stopPropagation();
+                                      console.log(`Clearing stored file: ${id}`);
+                                      localStorage.removeItem('file_' + id);
+                                      info.classList.add('hidden');
+                                      if (area) {
+                                          area.classList.remove('border-indigo-500', 'bg-indigo-50');
+                                      }
+                                  });
+                              }
+                          }
+                          
+                          if (area) {
+                              area.classList.add('border-indigo-500', 'bg-indigo-50');
+                          }
                       }
                   } catch (error) {
                       console.error(`Error loading ${id} from localStorage:`, error);
                   }
-              });
-
-              // Add event listeners for clear buttons
-              document.querySelectorAll('.clear-file').forEach(btn => {
-                  btn.addEventListener('click', (e) => {
-                      e.stopPropagation();
-                      const targetId = btn.getAttribute('data-target');
-                      const area = document.querySelector(`.file-upload-area[data-target="${targetId}"]`);
-                      const info = document.getElementById(targetId + '_info');
-
-                      console.log(`Clearing file: ${targetId}`);
-                      localStorage.removeItem('file_' + targetId);
-                      info.classList.add('hidden');
-                      area.classList.remove('border-indigo-500', 'bg-indigo-50');
-                  });
               });
           });
 
           function updateFileInfo(input, info) {
               if (input.files.length > 0) {
                   const file = input.files[0];
-                  info.textContent = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                  info.innerHTML = `Selected: ${file.name} (${(file.size / 1024).toFixed(1)} KB) <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="${input.id}">✕ Clear</button>`;
                   info.classList.remove('hidden');
+                  
+                  // Add event listener to the newly created clear button
+                  const clearBtn = info.querySelector('.clear-file');
+                  if (clearBtn) {
+                      clearBtn.addEventListener('click', (e) => {
+                          e.stopPropagation();
+                          console.log(`Clearing file: ${input.id}`);
+                          input.value = '';
+                          localStorage.removeItem('file_' + input.id);
+                          info.classList.add('hidden');
+                          const area = document.querySelector(`.file-upload-area[data-target="${input.id}"]`);
+                          if (area) {
+                              area.classList.remove('border-indigo-500', 'bg-indigo-50');
+                          }
+                      });
+                  }
+
                   // Persist file content
                   const reader = new FileReader();
                   reader.onload = (event) => {
@@ -97,9 +119,9 @@
                           const content = event.target.result;
                           const payload = { name: file.name, size: file.size, type: file.type, content };
                           localStorage.setItem('file_' + input.id, JSON.stringify(payload));
-                          console.log(`File ${file.name} saved to localStorage (${content.length} bytes)`);
+                          console.log(`File ${file.name} saved to localStorage for ${input.id} (${content.length} bytes)`);
                       } catch (error) {
-                          console.error("Error saving file to localStorage:", error);
+                          console.error(`Error saving file ${file.name} to localStorage:`, error);
                       }
                   };
                   reader.readAsText(file);
