@@ -12,3 +12,4 @@ Environment variables are used to access external services. You can either set t
 - `ASTRA_TOKEN` &ndash; API token for Astra DB (optional if using other auth)
 
 Create a `.env` file with lines of the form `VAR=value` or export these variables before running the notebooks.
+
