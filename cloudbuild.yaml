@@ -1,0 +1,23 @@
+substitutions:
+  _SERVICE_NAME: budgeter
+
+steps:
+  # 1. Build image using Cloud Buildpacks
+  - name: 'gcr.io/buildpacks/builder'
+    args: [
+      'build',
+      'gcr.io/$PROJECT_ID/$_SERVICE_NAME',
+      '--env', 'ENTRYPOINT=python run.py'
+    ]
+
+  # 2. Deploy to Cloud Run (global)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args: [
+      'run', 'deploy', '$_SERVICE_NAME',
+      '--image', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME',
+      '--allow-unauthenticated'
+    ]
+
+images:
+  - gcr.io/$PROJECT_ID/$_SERVICE_NAME
