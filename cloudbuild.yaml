@@ -3,11 +3,12 @@ substitutions:
 
 steps:
   # 1. Build image using Cloud Buildpacks
-  - name: 'gcr.io/buildpacks/builder'
+  - name: 'gcr.io/cloud-builders/gcloud'
     args: [
-      'build',
-      'gcr.io/$PROJECT_ID/$_SERVICE_NAME',
-      '--env', 'ENTRYPOINT=python run.py'
+      'builds', 'submit',
+      '--pack=image=gcr.io/$PROJECT_ID/$_SERVICE_NAME',
+      '--tag=gcr.io/$PROJECT_ID/$_SERVICE_NAME',
+      '.'
     ]
 
   # 2. Deploy to Cloud Run (global)
