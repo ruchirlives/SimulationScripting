@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 from typing import Any
-import simpy
-import pandas as pd
 
 from sim import Portfolio, parseYAML
 
@@ -32,13 +30,12 @@ def run_simulation(events: Any | None = None, *, steps: int = 12) -> dict:
             events = []
     events = events or []
 
-    env = simpy.Environment()
-    portfolio = Portfolio(env)
+    portfolio = Portfolio()
 
     if events:
         portfolio.set_portfolio(events)
 
-    portfolio.run(until=steps)
+    portfolio.run(steps)
 
     return {
         "projects": portfolio.list_projects().to_dict(orient="records"),
