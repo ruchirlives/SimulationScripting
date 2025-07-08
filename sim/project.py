@@ -3,25 +3,23 @@
 from __future__ import annotations
 
 import pandas as pd
-import simpy
 
 from .constants import SUPPORTDATA
-from .models import Worker, ConsolidatedAccount
+from .models import Worker
 from .utils import printtimestamp
 
 
 class Project:
     """Represents a project in the simulation."""
 
-    def __init__(self, portfolio, env: simpy.Environment, **kwargs):
+    def __init__(self, portfolio, **kwargs):
         self.kwargs = kwargs
         self.name = kwargs.get("name", "New Project")
         self.term = kwargs.get("term", 0)
         self.directcosts = kwargs.get("directcosts", [])
         self.supports = kwargs.get("supports", [])
-        self.env = env
         self.portfolio = portfolio
-        self.startstep = env.now
+        self.startstep = kwargs.get("time", portfolio.now)
         self.consolidated_account = portfolio.consolidated_account
         self.budget = kwargs.get("budget", 0)
         self.policies = []
@@ -35,7 +33,7 @@ class Project:
             for policy in policies:
                 cls = get_policy_class(policy["policy"])
                 if cls:
-                    self.policies.append(cls(self.env, self, **policy))
+                    self.policies.append(cls(self.portfolio, self, **policy))
 
         # Initialize staff
         self.staff = []
@@ -47,7 +45,7 @@ class Project:
         self.income_thismonth = 0
         self.cost = 0
         self.income = 0
-        self.env.process(self.start())
+        self.current_step = 0
 
     def calculate(self, step: int):
         """Calculate costs and income for a step."""
@@ -168,24 +166,28 @@ class Project:
         for policy in self.policies:
             policy.calculate(step)
 
-    def start(self):
-        """Start the project simulation."""
-        for i in range(self.term):
-            self.income_thismonth = self.costs_thismonth = 0
-            self.calculate(i)
-            self.sweep_policies(i)
-            self.income += self.income_thismonth
-            self.cost += self.costs_thismonth
-            cons = self.portfolio.consolidated_account
-            cons.update(
-                {"type": "expenditure", "title": "project costs", "project": self.name, "amount": self.costs_thismonth}
-            )
-            cons.update(
-                {"type": "income", "title": "project income", "project": self.name, "amount": self.income_thismonth}
-            )
-            yield self.env.timeout(1)
-        printtimestamp(self.env)
-        print(
-            f"Project {self.name} cost {self.cost:.2f} and generated {self.income:.2f} "
-            f"with budget {self.budget:.2f}"
+    def step(self) -> bool:
+        """Advance the project by one step."""
+        if self.current_step >= self.term:
+            return False
+        i = self.current_step
+        self.income_thismonth = self.costs_thismonth = 0
+        self.calculate(i)
+        self.sweep_policies(i)
+        self.income += self.income_thismonth
+        self.cost += self.costs_thismonth
+        cons = self.portfolio.consolidated_account
+        cons.update(
+            {"type": "expenditure", "title": "project costs", "project": self.name, "amount": self.costs_thismonth}
         )
+        cons.update(
+            {"type": "income", "title": "project income", "project": self.name, "amount": self.income_thismonth}
+        )
+        self.current_step += 1
+        if self.current_step == self.term:
+            printtimestamp(self.portfolio)
+            print(
+                f"Project {self.name} cost {self.cost:.2f} and generated {self.income:.2f} "
+                f"with budget {self.budget:.2f}"
+            )
+        return True

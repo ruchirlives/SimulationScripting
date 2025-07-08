@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import yaml
 import pandas as pd
-import simpy
 from uuid import uuid4
 import ast
 
@@ -19,10 +18,14 @@ def get_current_month(start_month: str = "apr", month: int = 0) -> str:
     return ALL_MONTHS[current_month_index]
 
 
-def printtimestamp(env: simpy.Environment):
-    """Print a formatted timestamp for the simulation environment."""
-    month = get_current_month("apr", env.now - 1)
-    print(f"\nMonth: {env.now} ({month})")
+def printtimestamp(env_or_step):
+    """Print a formatted timestamp given a simulation step."""
+    if hasattr(env_or_step, "now"):
+        step = env_or_step.now
+    else:
+        step = int(env_or_step)
+    month = get_current_month("apr", step - 1)
+    print(f"\nMonth: {step} ({month})")
 
 
 def pivotbudget(db: pd.DataFrame) -> pd.DataFrame:

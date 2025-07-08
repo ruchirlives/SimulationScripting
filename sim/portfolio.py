@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pandas as pd
-import simpy
 
 from .models import ConsolidatedAccount
 from .utils import get_current_month, printtimestamp
@@ -12,34 +11,28 @@ from .utils import get_current_month, printtimestamp
 class Portfolio:
     """Manages a portfolio of projects."""
 
-    def __init__(self, env: simpy.Environment, name: str = "My Portfolio"):
-        self.env = env
+    def __init__(self, name: str = "My Portfolio"):
         self.name = name
-        self.consolidated_account = ConsolidatedAccount(env)
-        self.projects = []
+        self.now = 0
+        self.consolidated_account = ConsolidatedAccount(self)
+        self.projects: list = []
+        self._pending_events: list[dict] = []
 
     def counter(self):
         """Counter process for debugging."""
         for i in range(1, 31):
-            month = get_current_month(start_month="apr", month=self.env.now)
+            month = get_current_month(start_month="apr", month=i)
             print(f"\nMonth: {i} {month}")
-            yield self.env.timeout(1)
 
     def set_event(self, event: dict):
-        """Set up an event in the simulation."""
-        e = self.env.event()
-        e.details = event
-        yield self.env.timeout(event["time"])
-        printtimestamp(self.env)
-        message = event.get("message", event.get("name", "new project"))
-        print(f"Event {message} succeeds")
-        e.succeed()
-        self.env.process(self.create_project(**event))
+        """Schedule an event for a future step."""
+        self._pending_events.append(event)
+        self._pending_events.sort(key=lambda e: e.get("time", 0))
 
     def set_portfolio(self, events: list[dict]):
         """Set up multiple events for the portfolio."""
         for event in events:
-            self.env.process(self.set_event(event))
+            self.set_event(event)
 
     def getbudget(self) -> pd.DataFrame:
         """Get consolidated budget for all projects."""
@@ -62,9 +55,22 @@ class Portfolio:
 
         return df
 
-    def run(self, until: int):
-        """Run the simulation until a specific time."""
-        self.env.run(until=until)
+    def run(self, steps: int):
+        """Run the simulation for a number of steps."""
+        for step in range(steps):
+            self.now = step
+            # create projects whose start time matches current step
+            events_to_start = [e for e in self._pending_events if e.get("time", 0) == step]
+            for event in events_to_start:
+                printtimestamp(self)
+                message = event.get("message", event.get("name", "new project"))
+                print(f"Event {message} succeeds")
+                self.create_project(**event)
+            self._pending_events = [e for e in self._pending_events if e not in events_to_start]
+
+            # update active projects
+            for prj in list(self.projects):
+                prj.step()
 
     def list_transactions(self) -> pd.DataFrame:
         """List all transactions in the consolidated account."""
@@ -79,11 +85,13 @@ class Portfolio:
             from .project import Project
 
             cls = Project
-        prj = cls(self, self.env, **kwargs)
+        prj = cls(self, **kwargs)
         self.projects.append(prj)
         staff_names = ", ".join(person.name for person in prj.staff)
-        print(f"Project {prj.name} created with budget {prj.budget:.2f} " f"and assigned staff {staff_names}")
-        yield self.env.timeout(1)
+        print(
+            f"Project {prj.name} created with budget {prj.budget:.2f} and assigned staff {staff_names}"
+        )
+        return prj
 
     def finance(self, term: int, capital: float, rate: float = 0.05):
         """Finance the portfolio."""
@@ -94,14 +102,13 @@ class Portfolio:
             {"type": "income", "title": "finance capitalisation", "project": "headoffice", "amount": capital}
         )
         totpay = 0
-        for i in range(term):
+        for _ in range(term):
             interest = rate * account
-            account = account - repayment
+            account -= repayment
             payment = repayment + interest
             totpay += payment
             self.consolidated_account.update(
                 {"type": "expenditure", "title": "finance servicing", "project": "headoffice", "amount": payment}
             )
-            yield self.env.timeout(1)
-        printtimestamp(self.env)
+        printtimestamp(self)
         print(f"Finance: Final account {account:.2f}, total paid {totpay:.2f}")

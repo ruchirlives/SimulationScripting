@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pandas as pd
-import simpy
 
 from .constants import NIRATE, NITHRESHOLD, EMPLOYERPENSIONRATE, PENSIONFTETHRESHOLD
 from .utils import get_current_month, printtimestamp
@@ -74,8 +73,8 @@ class Worker:
 class ConsolidatedAccount:
     """Manages financial transactions for the portfolio."""
 
-    def __init__(self, env: simpy.Environment):
-        self.env = env
+    def __init__(self, portfolio=None):
+        self.portfolio = portfolio
         self.total_capital = 0
         self.total_payments = 0
         self.total_income = 0
@@ -91,7 +90,8 @@ class ConsolidatedAccount:
             self.total_income += transaction["amount"]
             transaction["amount"] = -transaction["amount"]
         self.balance = self.total_income - self.total_payments
-        transaction["date"] = self.env.now
+        date = self.portfolio.now if self.portfolio is not None else 0
+        transaction["date"] = date
         transaction["balance"] = self.balance
         self.register.append(transaction)
 
