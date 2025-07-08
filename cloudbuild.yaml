@@ -1,7 +1,6 @@
 steps:
-  # 1. Use Cloud Native Buildpacks to build image from Python app
-  - name: 'gcr.io/buildpacks/builder'
-    entrypoint: pack
+  # 1. Use the official 'paketo-buildpacks/pack' image to build the app
+  - name: 'gcr.io/k8s-skaffold/pack'
     args:
       [
         'build',
