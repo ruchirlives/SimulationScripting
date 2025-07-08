@@ -1,5 +1,6 @@
 substitutions:
-  _SERVICE_NAME: budgeter
+  _SERVICE_NAME: simulationscripting
+  _REGION: europe-west2
 
 steps:
   # Build image with Buildpacks
