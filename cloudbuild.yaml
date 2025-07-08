@@ -8,7 +8,8 @@ steps:
     args: [
       'pack', 'build', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME',
       '--builder', 'gcr.io/buildpacks/builder',
-      '--env', 'GOOGLE_ENTRYPOINT=python run.py'
+      '--env', 'GOOGLE_ENTRYPOINT=python run.py',
+      '--publish'
     ]
 
   # Delay to ensure the image is visible
