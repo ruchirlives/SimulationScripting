@@ -3,11 +3,11 @@ substitutions:
 
 steps:
   # Build image with Buildpacks
-  - name: 'paketobuildpacks/pack'
+  - name: 'gcr.io/k8s-skaffold/pack'
     args: [
       'pack', 'build', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME',
       '--builder', 'gcr.io/buildpacks/builder',
-      '--env', 'ENTRYPOINT=python run.py'
+      '--env', 'GOOGLE_ENTRYPOINT=python run.py'
     ]
 
   # Delay to ensure the image is visible
