@@ -145,16 +145,17 @@ def parseYAML(yamltext: str, variables: dict = None):
                     try:
                         # Evaluate the expression
                         value = safe_eval(match, variables)
-                        
+
                         # Handle NaN values
                         import math
+
                         if isinstance(value, float) and math.isnan(value):
                             print(f"Warning: Expression '{match}' resulted in NaN, using 0 instead")
                             value = 0
                         elif isinstance(value, float) and math.isinf(value):
                             print(f"Warning: Expression '{match}' resulted in infinity, using 0 instead")
                             value = 0
-                            
+
                         # Replace the expression with the calculated value
                         result = result.replace(f"{{{match}}}", str(value))
                     except Exception as e:
@@ -168,6 +169,7 @@ def parseYAML(yamltext: str, variables: dict = None):
                         final_value = float(result)
                         # Check for NaN in the final result
                         import math
+
                         if math.isnan(final_value):
                             print(f"Warning: Final result is NaN, using 0 instead")
                             return 0
@@ -210,9 +212,14 @@ def parseYAML(yamltext: str, variables: dict = None):
         # Extract variables if they exist
         if "variables" in data:
             yaml_variables = data.pop("variables")
+            # Evaluate expressions in variable values if they are wrapped in {}
+            for k, v in yaml_variables.items():
+                if isinstance(v, str) and v.strip().startswith("{") and v.strip().endswith("}"):
+                    expr = v.strip()[1:-1]
+                    yaml_variables[k] = safe_eval(expr, default_variables)
             default_variables.update(yaml_variables)
             print(f"Debug: Loaded variables from root-level dict: {yaml_variables}")
-        
+
         # Return the events or projects section, or the entire dict if no specific section
         if "events" in data:
             data = data["events"]
