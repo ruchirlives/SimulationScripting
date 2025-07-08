@@ -44,7 +44,10 @@ class FullCostRecovery(Policy):
             daysperfte = item["daysperfte"]
             dayrate = linemanagerrate if itemname == "Line Management" else item["dayrate"]
             frequency = item["frequency"]
-            cost = person.fte * daysperfte * dayrate
+            try:
+                cost = person.fte * daysperfte * dayrate
+            except TypeError:
+                pass
             if frequency == "oneoff":
                 cost = cost if step == 0 else 0
             if frequency == "monthly":

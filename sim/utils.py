@@ -7,6 +7,7 @@ import yaml
 import pandas as pd
 import simpy
 from uuid import uuid4
+import ast
 
 from .constants import ALL_MONTHS
 
@@ -69,7 +70,6 @@ def parseYAML(yamltext: str, variables: dict = None):
         variables: Optional dictionary of variables to use in expressions
     """
     import re
-    import ast
     import operator
 
     # Default variables that can be used in expressions
@@ -171,10 +171,10 @@ def parseYAML(yamltext: str, variables: dict = None):
                         import math
 
                         if math.isnan(final_value):
-                            print(f"Warning: Final result is NaN, using 0 instead")
+                            print("Warning: Final result is NaN, using 0 instead")
                             return 0
                         elif math.isinf(final_value):
-                            print(f"Warning: Final result is infinity, using 0 instead")
+                            print("Warning: Final result is infinity, using 0 instead")
                             return 0
                         return final_value
                     else:
@@ -198,6 +198,71 @@ def parseYAML(yamltext: str, variables: dict = None):
                     data[key] = map_cls_strings_to_objects(value)
         return data
 
+    def resolve_with_two_dicts(raw_vars, base_ctx=None):
+        import ast
+        # base_ctx holds any built-in or pre-seeded names (optional)
+        resolved = dict(base_ctx or {})
+        unresolved = dict(raw_vars)
+
+        while unresolved:
+            progress = False
+
+            for name, val in list(unresolved.items()):
+                # 1) Literal: move straight to resolved
+                if not (
+                    isinstance(val, str)
+                    and val.strip().startswith("{")
+                    and val.strip().endswith("}")
+                ):
+                    # If the value is a string and contains another expression, try to resolve recursively
+                    if isinstance(val, str) and "{" in val and "}" in val:
+                        import re
+                        expr_pattern = r"\{([^}]+)\}"
+                        matches = re.findall(expr_pattern, val)
+                        result = val
+                        for match in matches:
+                            # Only substitute if all dependencies are resolved
+                            deps = {n.id for n in ast.walk(ast.parse(match)) if isinstance(n, ast.Name)}
+                            if deps <= resolved.keys():
+                                sub_value = safe_eval(match, resolved)
+                                result = result.replace(f"{{{match}}}", str(sub_value))
+                        # If after substitution, the string is still an expression, leave for next round
+                        if result != val:
+                            unresolved[name] = result
+                            progress = True
+                            continue
+                    resolved[name] = val
+                    del unresolved[name]
+                    progress = True
+                    continue
+
+                # 2) Expression: can we eval yet?
+                expr = val.strip()[1:-1]
+                # find identifiers in the AST
+                deps = {
+                    n.id for n in ast.walk(ast.parse(expr))
+                    if isinstance(n, ast.Name)
+                }
+
+                # if all deps are already in resolved, do the eval
+                if deps <= resolved.keys():
+                    resolved[name] = safe_eval(expr, resolved)
+                    del unresolved[name]
+                    progress = True
+
+            if not progress:
+                missing = set()
+                for val in unresolved.values():
+                    expr = val.strip()[1:-1]
+                    deps = {
+                        n.id for n in ast.walk(ast.parse(expr))
+                        if isinstance(n, ast.Name)
+                    }
+                    missing |= (deps - resolved.keys())
+                raise ValueError(f"Unresolvable or circular references: {missing}")
+
+        return resolved
+
     # Parse the YAML
     try:
         data = yaml.safe_load(yamltext)
@@ -212,13 +277,10 @@ def parseYAML(yamltext: str, variables: dict = None):
         # Extract variables if they exist
         if "variables" in data:
             yaml_variables = data.pop("variables")
-            # Evaluate expressions in variable values if they are wrapped in {}
-            for k, v in yaml_variables.items():
-                if isinstance(v, str) and v.strip().startswith("{") and v.strip().endswith("}"):
-                    expr = v.strip()[1:-1]
-                    yaml_variables[k] = safe_eval(expr, default_variables)
-            default_variables.update(yaml_variables)
-            print(f"Debug: Loaded variables from root-level dict: {yaml_variables}")
+            # Use resolve_with_two_dicts to resolve variables and expressions
+            resolved_vars = resolve_with_two_dicts(yaml_variables, default_variables)
+            default_variables.update(resolved_vars)
+            print(f"Debug: Loaded variables from root-level dict: {resolved_vars}")
 
         # Return the events or projects section, or the entire dict if no specific section
         if "events" in data:
