@@ -1,0 +1,20 @@
+steps:
+  # 1. Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/concepter/budgeter', '.']
+
+  # 2. Push the image to Google Container Registry (GCR)
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/concepter/budgeter']
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      [
+        'run', 'deploy', 'budgeter',
+        '--image', 'gcr.io/concepter/budgeter',
+        '--region', 'europe-west2',
+        '--platform', 'managed',
+        '--allow-unauthenticated'
+      ]
