@@ -1,16 +1,18 @@
-options:
-  logging: CLOUD_LOGGING_ONLY
-
 steps:
-  # 1. Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/concepter/budgeter', '.']
+  # 1. Use Cloud Native Buildpacks to build image from Python app
+  - name: 'gcr.io/buildpacks/builder'
+    entrypoint: pack
+    args:
+      [
+        'build',
+        'gcr.io/concepter/budgeter',
+        '--builder',
+        'gcr.io/buildpacks/builder',
+        '--env',
+        'GOOGLE_ENTRYPOINT=python run.py'
+      ]
 
-  # 2. Push the image to Google Container Registry (GCR)
-  - name: 'gcr.io/cloud-builders/docker'
-    args: ['push', 'gcr.io/concepter/budgeter']
-
-  # 3. Deploy to Cloud Run
+  # 2. Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -21,3 +23,6 @@ steps:
         '--platform', 'managed',
         '--allow-unauthenticated'
       ]
+
+options:
+  logging: CLOUD_LOGGING_ONLY
