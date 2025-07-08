@@ -11,9 +11,9 @@ steps:
     ]
 
   # Delay to ensure the image is visible
-  - name: 'bash'
-    entrypoint: 'bash'
-    args: ['-c', 'sleep 10']
+  # - name: 'bash'
+  #   entrypoint: 'bash'
+  #   args: ['-c', 'sleep 10']
 
   # Deploy to Cloud Run (global)
   - name: 'gcr.io/cloud-builders/gcloud'
