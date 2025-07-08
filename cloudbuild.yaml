@@ -2,20 +2,6 @@ substitutions:
   _SERVICE_NAME: budgeter
 
 steps:
-  # Build image with Buildpacks
-  - name: 'gcr.io/cloud-builders/gcloud'
-    args: [
-      'builds',
-      '--pack=image=gcr.io/$PROJECT_ID/$_SERVICE_NAME',
-      '--project=$PROJECT_ID',
-      '.'
-    ]
-
-  # Delay to ensure the image is visible
-  - name: 'bash'
-    entrypoint: 'bash'
-    args: ['-c', 'sleep 10']
-
   # Deploy to Cloud Run (global)
   - name: 'gcr.io/cloud-builders/gcloud'
     args: [
