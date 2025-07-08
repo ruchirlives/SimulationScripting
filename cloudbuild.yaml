@@ -3,13 +3,19 @@ substitutions:
 
 steps:
   # 1. Build image using Cloud Buildpacks
-  - name: 'gcr.io/cloud-builders/gcloud'
+  - name: 'gcr.io/cloud-builders'
+    entrypoint: 'gcloud'
     args: [
       'builds', 'submit',
       '--pack=image=gcr.io/$PROJECT_ID/$_SERVICE_NAME',
-      '--tag=gcr.io/$PROJECT_ID/$_SERVICE_NAME',
+      '--project=$PROJECT_ID',
       '.'
     ]
+
+  # Wait for the image to be available
+  - name: 'bash'
+    entrypoint: 'bash'
+    args: ['-c', 'sleep 10']  # wait 10 seconds for image availability
 
   # 2. Deploy to Cloud Run (global)
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
