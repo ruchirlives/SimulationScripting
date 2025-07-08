@@ -217,7 +217,7 @@ def parseYAML(yamltext: str, variables: dict = None):
                     and val.strip().startswith("{")
                     and val.strip().endswith("}")
                 ):
-                    # If the value is a string and contains another expression, try to resolve recursively
+                    # If the value is a string and contains another expression, try to resolve recursively - check
                     if isinstance(val, str) and "{" in val and "}" in val:
                         import re
                         expr_pattern = r"\{([^}]+)\}"
