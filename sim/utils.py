@@ -75,6 +75,8 @@ def parseYAML(yamltext: str, variables: dict = None):
     import re
     import operator
 
+    print("DEBUG: STARTING YAML PARSING WITH THE NEW CODE")
+
     # Default variables that can be used in expressions
     default_variables = {
         "pi": 3.14159,
