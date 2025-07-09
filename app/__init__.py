@@ -4,7 +4,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
 # Expose the Google OAuth blueprint so other modules can import it
-google_bp = make_google_blueprint(scope=["profile", "email"], redirect_url="/simulate")
+google_bp = make_google_blueprint(scope=["profile", "email"], redirect_url="/")
 
 from .routes import openai_bp, astra_bp, sim_bp, root_bp
 
