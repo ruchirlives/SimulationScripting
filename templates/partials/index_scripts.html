@@ -144,8 +144,7 @@
               });
           });
 
-          // Restore persisted files on load and initialise CodeMirror
-          document.addEventListener('DOMContentLoaded', () => {
+          function initializeEditors() {
               console.log("Loading saved files from localStorage");
               const ids = ['yaml_file', 'fcrdata_file', 'supportdata_file'];
               const keywords = ['item','description','type','budget','step','amount','date','term','projects','transactions','support'];
@@ -199,12 +198,6 @@
                   });
                   editors[id] = view;
 
-                  // On file load (already in your updateFileInfo)
-                  if (editors[input.id]) {
-                      editors[input.id].dispatch({
-                          changes: { from: 0, to: editors[input.id].state.doc.length, insert: content }
-                      });
-                  }
               });
 
               // Download buttons
@@ -224,7 +217,14 @@
                       }
                   });
               });
-          });
+          }
+
+          // Restore persisted files on load and initialise CodeMirror
+          if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', initializeEditors);
+          } else {
+              initializeEditors();
+          }
 
           function updateFileInfo(input, info) {
               if (input.files.length > 0) {
