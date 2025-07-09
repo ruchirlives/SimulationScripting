@@ -1,6 +1,5 @@
 substitutions:
   _SERVICE_NAME: budgeter
-  _REGION: global
 
 steps:
   # Build image with Buildpacks
@@ -23,7 +22,6 @@ steps:
     args: [
       'run', 'deploy', '$_SERVICE_NAME',
       '--image', 'gcr.io/$PROJECT_ID/$_SERVICE_NAME',
-      '--region', '$_REGION',
       '--allow-unauthenticated'
     ]
 
