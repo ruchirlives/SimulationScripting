@@ -199,12 +199,6 @@
                   });
                   editors[id] = view;
 
-                  // On file load (already in your updateFileInfo)
-                  if (editors[input.id]) {
-                      editors[input.id].dispatch({
-                          changes: { from: 0, to: editors[input.id].state.doc.length, insert: content }
-                      });
-                  }
               });
 
               // Download buttons
