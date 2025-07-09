@@ -1,4 +1,5 @@
     <script>
+          const editors = {};
           // File upload handling
           document.querySelectorAll('.file-upload-area').forEach(area => {
               const input = area.querySelector('input[type="file"]');
@@ -46,71 +47,76 @@
                   localStorage.removeItem('file_' + targetId);
                   info.classList.add('hidden');
                   area.classList.remove('border-indigo-500', 'bg-indigo-50');
-                  const editor = document.getElementById(targetId + '_editor');
-                  if (editor) {
-                      editor.value = '';
+                  if (editors[targetId]) {
+                      editors[targetId].dispatch({
+                          changes: {from: 0, to: editors[targetId].state.doc.length, insert: ''}
+                      });
                   }
               });
           });
 
-          // Restore persisted files on load
+          // Restore persisted files on load and initialise CodeMirror
           document.addEventListener('DOMContentLoaded', () => {
               console.log("Loading saved files from localStorage");
-              ['yaml_file', 'fcrdata_file', 'supportdata_file'].forEach(id => {
+              const ids = ['yaml_file', 'fcrdata_file', 'supportdata_file'];
+              const keywords = ['item','description','type','budget','step','amount','date','term','projects','transactions','support'];
+              const hint = autocompletion({
+                  override: [ctx => {
+                      let w = ctx.matchBefore(/\w*/);
+                      if (!w || (w.from == w.to && !ctx.explicit)) return null;
+                      return {from: w.from, options: keywords.map(k => ({label:k, type:'keyword'}))};
+                  }]
+              });
+
+              ids.forEach(id => {
+                  let data = null;
                   try {
                       const stored = localStorage.getItem('file_' + id);
-                      if (stored) {
-                          const data = JSON.parse(stored);
-                          console.log(`Found stored file: ${id}, ${data.name}, ${data.content ? data.content.length + ' bytes' : 'missing content'}`);
-                          const area = document.querySelector(`.file-upload-area[data-target="${id}"]`);
-                          const info = document.getElementById(id + '_info');
-                          const editor = document.getElementById(id + '_editor');
-
-                          if (info) {
-                              info.innerHTML = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB) <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="${id}">✕ Clear</button>`;
-                              info.classList.remove('hidden');
-
-                              // Add event listener to the clear button
-                              const clearBtn = info.querySelector('.clear-file');
-                              if (clearBtn) {
-                                  clearBtn.addEventListener('click', (e) => {
-                                      e.stopPropagation();
-                                      console.log(`Clearing stored file: ${id}`);
-                                      localStorage.removeItem('file_' + id);
-                                      info.classList.add('hidden');
-                                      if (area) {
-                                          area.classList.remove('border-indigo-500', 'bg-indigo-50');
-                                      }
-                                      if (editor) {
-                                          editor.value = '';
-                                      }
-                                  });
-                              }
-                          }
-
-                          if (editor) {
-                              editor.value = data.content || '';
-                          }
-
-                          if (area) {
-                              area.classList.add('border-indigo-500', 'bg-indigo-50');
-                          }
-                      }
+                      if (stored) data = JSON.parse(stored);
                   } catch (error) {
                       console.error(`Error loading ${id} from localStorage:`, error);
                   }
-              });
 
-              // Set up editor listeners
-              document.querySelectorAll('.yaml-editor').forEach(textarea => {
-                  textarea.addEventListener('input', () => {
-                      const targetId = textarea.getAttribute('data-target');
-                      let stored = localStorage.getItem('file_' + targetId);
-                      stored = stored ? JSON.parse(stored) : { name: targetId + '.yaml', type: 'text/yaml' };
-                      stored.content = textarea.value;
-                      stored.size = textarea.value.length;
-                      localStorage.setItem('file_' + targetId, JSON.stringify(stored));
+                  const area = document.querySelector(`.file-upload-area[data-target="${id}"]`);
+                  const info = document.getElementById(id + '_info');
+                  const parent = document.getElementById(id + '_editor');
+
+                  if (data && info) {
+                      info.innerHTML = `Selected: ${data.name} (${(data.size/1024).toFixed(1)} KB) <button type="button" class="clear-file ml-2 text-red-500 hover:text-red-700" data-target="${id}">✕ Clear</button>`;
+                      info.classList.remove('hidden');
+                      const clearBtn = info.querySelector('.clear-file');
+                      if (clearBtn) {
+                          clearBtn.addEventListener('click', (e) => {
+                              e.stopPropagation();
+                              console.log(`Clearing stored file: ${id}`);
+                              localStorage.removeItem('file_' + id);
+                              info.classList.add('hidden');
+                              if (area) area.classList.remove('border-indigo-500', 'bg-indigo-50');
+                              if (editors[id]) editors[id].dispatch({changes:{from:0,to:editors[id].state.doc.length,insert:''}});
+                          });
+                      }
+                  }
+
+                  const view = new EditorView({
+                      doc: data && data.content ? data.content : '',
+                      extensions: [basicSetup, yaml(), hint],
+                      parent
                   });
+                  editors[id] = view;
+
+                  if (area && data) {
+                      area.classList.add('border-indigo-500', 'bg-indigo-50');
+                  }
+
+                  view.dispatch = ((orig => tr => {
+                      orig.call(view, tr);
+                      const content = view.state.doc.toString();
+                      const stored = data || { name: id + '.yaml', type: 'text/yaml' };
+                      stored.content = content;
+                      stored.size = content.length;
+                      localStorage.setItem('file_' + id, JSON.stringify(stored));
+                      data = stored;
+                  })(view.dispatch.bind(view)));
               });
 
               // Download buttons
@@ -161,9 +167,8 @@
                           const content = event.target.result;
                           const payload = { name: file.name, size: file.size, type: file.type, content };
                           localStorage.setItem('file_' + input.id, JSON.stringify(payload));
-                          const editor = document.getElementById(input.id + '_editor');
-                          if (editor) {
-                              editor.value = content;
+                          if (editors[input.id]) {
+                              editors[input.id].dispatch({changes:{from:0,to:editors[input.id].state.doc.length,insert:content}});
                           }
                           console.log(`File ${file.name} saved to localStorage for ${input.id} (${content.length} bytes)`);
                       } catch (error) {
@@ -308,20 +313,19 @@
           document.getElementById('simulationForm').addEventListener('submit', async (e) => {
               e.preventDefault();
 
-              // Build FormData with persisted files
+              // Build FormData with editor content
               const formData = new FormData();
               let hasRequiredFiles = false;
 
               try {
                   // Check for main simulation file (required)
-                  const mainYamlStored = localStorage.getItem('file_yaml_file');
-                  if (mainYamlStored) {
-                      const mainFile = JSON.parse(mainYamlStored);
-                      if (mainFile && mainFile.content) {
-                          console.log(`Using stored yaml_file: ${mainFile.name} (${mainFile.content.length} bytes)`);
-                          formData.append('yaml_file', new File([mainFile.content], mainFile.name, { type: mainFile.type }));
-                          hasRequiredFiles = true;
-                      }
+                  const mainStored = localStorage.getItem('file_yaml_file');
+                  const mainMeta = mainStored ? JSON.parse(mainStored) : { name: 'yaml_file.yaml', type: 'text/yaml' };
+                  const mainContent = editors['yaml_file'].state.doc.toString();
+                  if (mainContent.trim().length > 0) {
+                      formData.append('yaml_file', new File([mainContent], mainMeta.name, { type: mainMeta.type }));
+                      hasRequiredFiles = true;
+                      localStorage.setItem('file_yaml_file', JSON.stringify({ ...mainMeta, size: mainContent.length, content: mainContent }));
                   }
 
                   // Only proceed if we have the required yaml file
@@ -333,12 +337,11 @@
                   // Add optional files
                   ['fcrdata_file', 'supportdata_file'].forEach(id => {
                       const stored = localStorage.getItem('file_' + id);
-                      if (stored) {
-                          const f = JSON.parse(stored);
-                          if (f && f.content) {
-                              console.log(`Using stored ${id}: ${f.name} (${f.content.length} bytes)`);
-                              formData.append(id, new File([f.content], f.name, { type: f.type }));
-                          }
+                      const meta = stored ? JSON.parse(stored) : { name: id + '.yaml', type: 'text/yaml' };
+                      const content = editors[id].state.doc.toString();
+                      if (content.trim().length > 0) {
+                          formData.append(id, new File([content], meta.name, { type: meta.type }));
+                          localStorage.setItem('file_' + id, JSON.stringify({ ...meta, size: content.length, content }));
                       }
                   });
 
