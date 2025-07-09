@@ -1,3 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation App</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@codemirror/view/dist/style/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@codemirror/theme-one-dark/dist/index.min.css">
+    <style>
+        /* Add your custom styles here */
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+    <div class="container mx-auto py-8">
+        <h1 class="text-3xl font-bold mb-6">Simulation File Uploader</h1>
+
+        <!-- File upload areas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="file-upload-area p-4 border-2 border-dashed rounded-lg bg-white shadow-sm" data-target="yaml_file">
+                <input id="yaml_file" type="file" class="hidden" accept=".yaml, .yml">
+                <div class="file-info text-sm text-gray-500"></div>
+                <button type="button" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700">
+                    Upload YAML File
+                </button>
+            </div>
+            <div class="file-upload-area p-4 border-2 border-dashed rounded-lg bg-white shadow-sm" data-target="fcrdata_file">
+                <input id="fcrdata_file" type="file" class="hidden" accept=".yaml, .yml">
+                <div class="file-info text-sm text-gray-500"></div>
+                <button type="button" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700">
+                    Upload FCR Data File
+                </button>
+            </div>
+            <div class="file-upload-area p-4 border-2 border-dashed rounded-lg bg-white shadow-sm" data-target="supportdata_file">
+                <input id="supportdata_file" type="file" class="hidden" accept=".yaml, .yml">
+                <div class="file-info text-sm text-gray-500"></div>
+                <button type="button" class="mt-2 px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700">
+                    Upload Support Data File
+                </button>
+            </div>
+        </div>
+
+        <!-- Simulation form -->
+        <form id="simulationForm" class="bg-white p-6 rounded-lg shadow-md mb-8">
+            <h2 class="text-xl font-semibold mb-4">Simulation Parameters</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="steps" class="block text-sm font-medium text-gray-700 mb-1">Number of Steps</label>
+                    <input type="number" id="steps" name="steps" min="1" value="10" class="block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" id="submitBtn" class="w-full px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700">
+                    🚀 Run Simulation
+                </button>
+            </div>
+        </form>
+
+        <!-- Response area -->
+        <div id="responseArea" class="hidden">
+            <h2 class="text-xl font-semibold mb-4">Simulation Results</h2>
+            <div id="tabContainer" class="mb-4">
+                <button type="button" class="tab-btn px-4 py-2 mr-2 rounded-md font-medium" onclick="showTab('summary')">
+                    Summary
+                </button>
+                <button type="button" class="tab-btn px-4 py-2 mr-2 rounded-md font-medium" onclick="showTab('raw-json')">
+                    Raw JSON
+                </button>
+            </div>
+            <div id="loadingIndicator" class="hidden text-center mb-4">
+                <svg class="animate-spin h-5 w-5 mx-auto text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4.293 12.293a1 1 0 011.414 0L12 18.586l6.293-6.293a1 1 0 011.414 1.414l-7 7a1 1 0 01-1.414 0l-7-7a1 1 0 010-1.414z"></path>
+                </svg>
+            </div>
+            <pre id="responseContent" class="bg-gray-50 p-4 rounded-md overflow-x-auto text-sm"></pre>
+        </div>
+
+        <!-- YAML Editor Section -->
+        <div class="mt-4">
+            <label for="yaml_file_editor" class="block mb-2 font-semibold text-slate-600">Edit YAML Content</label>
+            <div id="yaml_file_editor" class="yaml-editor w-full p-3 border border-gray-300 rounded-md font-mono text-sm" style="min-height: 10rem;"></div>
+            <button type="button" class="download-file mt-2 text-indigo-500 underline" data-target="yaml_file">Download YAML</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@codemirror/basic-setup/dist/basic-setup.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@codemirror/lang-yaml/dist/lang-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@codemirror/autocomplete/dist/autocomplete.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@codemirror/view/dist/view.min.js"></script>
     <script>
           const editors = {};
           // File upload handling
@@ -97,26 +186,25 @@
                       }
                   }
 
+                  // During initialization
                   const view = new EditorView({
                       doc: data && data.content ? data.content : '',
-                      extensions: [basicSetup, yaml(), hint],
+                      extensions: [
+                          basicSetup,
+                          yaml(),
+                          hint,
+                          EditorView.editable.of(true) // Ensure editor is editable
+                      ],
                       parent
                   });
                   editors[id] = view;
 
-                  if (area && data) {
-                      area.classList.add('border-indigo-500', 'bg-indigo-50');
+                  // On file load (already in your updateFileInfo)
+                  if (editors[input.id]) {
+                      editors[input.id].dispatch({
+                          changes: { from: 0, to: editors[input.id].state.doc.length, insert: content }
+                      });
                   }
-
-                  view.dispatch = ((orig => tr => {
-                      orig.call(view, tr);
-                      const content = view.state.doc.toString();
-                      const stored = data || { name: id + '.yaml', type: 'text/yaml' };
-                      stored.content = content;
-                      stored.size = content.length;
-                      localStorage.setItem('file_' + id, JSON.stringify(stored));
-                      data = stored;
-                  })(view.dispatch.bind(view)));
               });
 
               // Download buttons
@@ -168,7 +256,14 @@
                           const payload = { name: file.name, size: file.size, type: file.type, content };
                           localStorage.setItem('file_' + input.id, JSON.stringify(payload));
                           if (editors[input.id]) {
-                              editors[input.id].dispatch({changes:{from:0,to:editors[input.id].state.doc.length,insert:content}});
+                              // Replace all content in the editor with the loaded file content
+                              editors[input.id].dispatch({
+                                  changes: { from: 0, to: editors[input.id].state.doc.length, insert: content }
+                              });
+                          } else {
+                              // Fallback: set the text content of the editor div if CodeMirror is not initialized
+                              const editorDiv = document.getElementById(input.id + '_editor');
+                              if (editorDiv) editorDiv.textContent = content;
                           }
                           console.log(`File ${file.name} saved to localStorage for ${input.id} (${content.length} bytes)`);
                       } catch (error) {
@@ -464,3 +559,5 @@
               }
           });
     </script>
+</body>
+</html>
