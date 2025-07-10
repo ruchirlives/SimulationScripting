@@ -1,12 +1,3 @@
-// Include these <script> and <link> tags in your base.html or layout:
-// <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
-// <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/monokai.min.css" />
-// <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css" />
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/yaml/yaml.min.js"></script>
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.js"></script>
-// <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/anyword-hint.min.js"></script>
-
 window.addEventListener("DOMContentLoaded", () => {
     const contextualHints = {
         projects: ["term", "name", "directcosts", "supports", "portfolio", "startstep"],
@@ -47,16 +38,21 @@ window.addEventListener("DOMContentLoaded", () => {
             const key = keyValueMatch[1];
             const valuePart = keyValueMatch[2] || "";
             if (contextualHints[key]) {
+                const needsQuotes = key === "frequency";
+                const suggestions = contextualHints[key].map((v) => ({
+                    text: needsQuotes ? ` "${v}"` : v,
+                    displayText: v
+                }));
+
+                // If valuePart is empty, insert at end of line (after colon)
+                const colonIndex = line.indexOf(":");
+                const insertPos = valuePart
+                    ? CodeMirror.Pos(cursor.line, line.indexOf(valuePart))
+                    : CodeMirror.Pos(cursor.line, colonIndex + 1);
+
                 return {
-                    list: contextualHints[key].map((v) => {
-                        // If value should be quoted (e.g. frequency options), add quotes
-                        const needsQuotes = key === "frequency";
-                        return {
-                            text: needsQuotes ? `"${v}"` : v,
-                            displayText: v,
-                        };
-                    }),
-                    from: CodeMirror.Pos(cursor.line, line.indexOf(valuePart)),
+                    list: suggestions,
+                    from: insertPos,
                     to: CodeMirror.Pos(cursor.line, cursor.ch),
                 };
             }
@@ -93,22 +89,46 @@ window.addEventListener("DOMContentLoaded", () => {
 
     }
 
-
     // Attach CodeMirror to each textarea.yaml-editor
     document.querySelectorAll("textarea.yaml-editor").forEach((textarea) => {
+        // Ensure codemirrorEditors is defined globally
+        if (typeof window.codemirrorEditors === 'undefined') {
+            window.codemirrorEditors = {};
+        }
+        const codemirrorEditors = window.codemirrorEditors;
         const cmDiv = document.createElement("div");
         cmDiv.style = "min-height: 250px;";
         textarea.parentNode.insertBefore(cmDiv, textarea);
         textarea.style.display = "none";
 
+        const targetId = textarea.getAttribute("data-target");
+
+        // Try to get restored content from localStorage
+        let initialContent = "";
+        try {
+            const stored = localStorage.getItem("file_" + targetId);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                if (parsed.content) {
+                    initialContent = parsed.content;
+                }
+            }
+        } catch (e) {
+            console.warn(`Could not restore ${targetId} from localStorage`, e);
+        }
+
         const editor = CodeMirror(cmDiv, {
-            value: textarea.value,
+            value: initialContent,
             mode: "yaml",
             theme: "monokai",
             lineNumbers: true,
             indentUnit: 2,
             extraKeys: {
-                "Ctrl-Space": "autocomplete"
+                "Ctrl-Space": "autocomplete",
+                "Tab": function (cm) {
+                    cm.replaceSelection("  ", "end"); // insert 2 spaces
+                },
+                "Shift-Tab": "indentLess"
             },
             hintOptions: {
                 hint: yamlContextHint,
@@ -121,9 +141,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
         // Live sync to textarea
         editor.on("change", () => {
-            textarea.value = editor.getValue();
-        });
+            const content = editor.getValue();
+            textarea.value = content;
 
+            let stored = localStorage.getItem("file_" + targetId);
+            stored = stored ? JSON.parse(stored) : { name: targetId + ".yaml", type: "text/yaml" };
+            stored.content = content;
+            stored.size = content.length;
+
+            localStorage.setItem("file_" + targetId, JSON.stringify(stored));
+        });
         // Trigger autocomplete on typing
         editor.on("inputRead", (cm, change) => {
             if (change.text[0].match(/[\w\-]/)) {
@@ -131,4 +158,5 @@ window.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+
 });
