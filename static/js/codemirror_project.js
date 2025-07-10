@@ -11,6 +11,7 @@ window.addEventListener("DOMContentLoaded", () => {
         Finance: ["term", "capital", "rate"],
         CarbonFinancing: ["term", "capital", "rate", "investment", "tree_planting_cost_per_unit", "carbon_credit_per_unit"],
 
+        variables: [],
         item: [],
         frequency: ["monthly", "annual", "oneoff"],
         dayrate: [],
