@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CodeMirror 5 YAML</title>
+
+  <!-- CodeMirror core CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/theme/monokai.min.css" />
+
+  <!-- CodeMirror core JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+  <!-- YAML mode -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/yaml/yaml.min.js"></script>
+</head>
+<body>
+  <h2>YAML Editor</h2>
+  <textarea id="yamlEditor">name: MyApp
+version: 1.0
+dependencies:
+  express: ^4.0
+  lodash: ^4.17.21
+</textarea>
+
+  <script>
+    const editor = CodeMirror.fromTextArea(document.getElementById("yamlEditor"), {
+      mode: "yaml",
+      lineNumbers: true,
+      theme: "monokai", // Or try 'default'
+      indentUnit: 2
+    });
+  </script>
+</body>
+</html>

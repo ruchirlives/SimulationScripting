@@ -4,14 +4,17 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 
 # Expose the Google OAuth blueprint so other modules can import it
-google_bp = make_google_blueprint(scope=["profile", "email"], redirect_url="/simulate")
+google_bp = make_google_blueprint(scope=["profile", "email"], redirect_url="/")
 
 from .routes import openai_bp, astra_bp, sim_bp, root_bp
 
 
 def create_app() -> Flask:
-    template_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
-    app = Flask(__name__, template_folder=template_dir)
+    root_dir = os.path.dirname(os.path.dirname(__file__))
+    template_dir = os.path.join(root_dir, "templates")
+    static_dir = os.path.join(root_dir, "static")
+
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 
     # Tell Flask to trust Cloud Run's proxy headers
     app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)

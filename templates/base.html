@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{% block title %}Simulation Backend - YAML Upload{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com?minify=true"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/mode/yaml/yaml.min.js"></script>
+
     <script>
       tailwind.config = {
         theme: {
@@ -18,8 +22,55 @@
     </script>
     <style>
       @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      /* Force CodeMirror 6 oneDark background and text color */
+      .cm-editor.cm-one-dark {
+        background: #282c34 !important;
+        color: #abb2bf !important;
+      }
+    </style>
+    <style>
+      .cm-editor {
+        background-color: #1e1e1e;
+        color: white;
+        font-family: monospace;
+        padding: 8px;
+        border-radius: 6px;
+        border: 1px solid #444;
+      }
+
+      .cm-content {
+        padding: 0.5rem;
+      }
+
+      .cm-line {
+        line-height: 1.5;
+      }
+
+      .cm-string {
+        color: #98c379;
+      }
+      .cm-keyword {
+        color: #c678dd;
+      }
+      .cm-variableName {
+        color: #e5c07b;
+      }
+      .cm-property {
+        color: #56b6c2;
+      }
+      .cm-number {
+        color: #d19a66;
+      }
+      .cm-comment {
+        color: #5c6370;
+        font-style: italic;
       }
     </style>
   </head>
@@ -28,22 +79,23 @@
       <div class="bg-gradient-to-r from-slate-700 to-slate-600 text-white p-8 text-center">
         <div class="flex justify-between items-center">
           <div class="flex-1">
-            <h1 class="text-4xl font-bold mb-3">🚀 Simulation Backend</h1>
+            <h1 class="text-4xl font-bold mb-3">Simulation Backend</h1>
             <p class="text-lg opacity-90">Upload YAML files to run portfolio simulations</p>
           </div>
           {% if user_info %}
           <div class="text-right">
             <p class="text-sm opacity-80">Hello, {{ user_info.name or user_info.email }}!</p>
-            <a href="{{ url_for('root.logout') }}" class="inline-block mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-colors">
+            <a
+              href="{{ url_for('root.logout') }}"
+              class="inline-block mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-colors"
+            >
               Logout
             </a>
           </div>
           {% endif %}
         </div>
       </div>
-      <div class="p-10">
-        {% block content %}{% endblock %}
-      </div>
+      <div class="p-10">{% block content %}{% endblock %}</div>
     </div>
 
     {% block scripts %}{% endblock %}
