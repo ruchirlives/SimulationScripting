@@ -1,6 +1,6 @@
 window.addEventListener("DOMContentLoaded", () => {
     const contextualHints = {
-        projects: ["term", "name", "directcosts", "supports", "portfolio", "startstep"],
+        projects: ["time", "term", "name", "directcosts", "supports", "portfolio", "startstep", "staffing", "policies", "description"],
         directcosts: ["item", "cost", "frequency", "description"],
         supports: ["item", "step", "description", "frequency", "units"],
 
