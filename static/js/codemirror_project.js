@@ -3,14 +3,40 @@ window.addEventListener("DOMContentLoaded", () => {
         projects: ["term", "name", "directcosts", "supports", "portfolio", "startstep"],
         directcosts: ["item", "cost", "frequency", "description"],
         supports: ["item", "step", "description", "frequency", "units"],
-        frequency: ["monthly", "annual", "oneoff"],
+
         staffing: ["name", "role", "salary", "fte", "linemanagerrate", "employerpensionrate", "description"],
         policies: ["policy", "description", "frequency", "amount", "fund", "step"],
         policy: ["FullCostRecovery", "Grant", "Finance", "CarbonFinancing"],
         Grant: ["amount", "fund", "step"],
         Finance: ["term", "capital", "rate"],
-        CarbonFinancing: ["term", "capital", "rate", "investment", "tree_planting_cost_per_unit", "carbon_credit_per_unit"]
+        CarbonFinancing: ["term", "capital", "rate", "investment", "tree_planting_cost_per_unit", "carbon_credit_per_unit"],
+
+        item: [],
+        frequency: ["monthly", "annual", "oneoff"],
+        dayrate: [],
+        daysperfte: [],
+        units: [],
+
+
+
     };
+    function highlightKeywords(editor, keywords) {
+        const doc = editor.getDoc();
+        editor.getAllMarks().forEach(mark => mark.clear());
+
+        keywords.forEach(word => {
+            const cursor = doc.getSearchCursor(new RegExp(`\\b${word}\\b`, "g"));
+            while (cursor.findNext()) {
+                editor.markText(cursor.from(), cursor.to(), {
+                    className: "cm-keyword-highlight"
+                });
+            }
+        });
+    }
+
+    const allYamlKeywords = Array.from(
+        new Set(Object.keys(contextualHints).concat(...Object.values(contextualHints)))
+    );
 
     function yamlContextHint(cm) {
         const cursor = cm.getCursor();
@@ -38,9 +64,8 @@ window.addEventListener("DOMContentLoaded", () => {
             const key = keyValueMatch[1];
             const valuePart = keyValueMatch[2] || "";
             if (contextualHints[key]) {
-                const needsQuotes = key === "frequency";
                 const suggestions = contextualHints[key].map((v) => ({
-                    text: needsQuotes ? ` "${v}"` : v,
+                    text: ` ` + v,
                     displayText: v
                 }));
 
@@ -117,6 +142,7 @@ window.addEventListener("DOMContentLoaded", () => {
             console.warn(`Could not restore ${targetId} from localStorage`, e);
         }
 
+
         const editor = CodeMirror(cmDiv, {
             value: initialContent,
             mode: "yaml",
@@ -136,14 +162,36 @@ window.addEventListener("DOMContentLoaded", () => {
             }
         });
 
+        // Trigger one-time highlight after CM renders fully
+        let initialHighlightDone = false;
+        editor.on("changes", () => {
+            if (!initialHighlightDone) {
+                highlightKeywords(editor, allYamlKeywords);
+                initialHighlightDone = true;
+            }
+        });
+
+
         // Set the editor
         codemirrorEditors[textarea.getAttribute("data-target")] = editor;
         // Apply any file-loaded YAML content to the editor (if waiting)
         if (window.pendingCodemirrorUpdates && window.pendingCodemirrorUpdates[targetId]) {
             const pending = window.pendingCodemirrorUpdates[targetId];
             editor.setValue(pending);
+
+            setTimeout(() => {
+                highlightKeywords(editor, allYamlKeywords);
+            }, 20); // allow layout to settle
+
             delete window.pendingCodemirrorUpdates[targetId];
+        } else {
+            // If no pending override, highlight what was loaded via initialContent
+            setTimeout(() => {
+                highlightKeywords(editor, allYamlKeywords);
+            }, 20);
         }
+
+
 
         // Live sync to textarea
         editor.on("change", () => {
@@ -156,6 +204,11 @@ window.addEventListener("DOMContentLoaded", () => {
             stored.size = content.length;
 
             localStorage.setItem("file_" + targetId, JSON.stringify(stored));
+
+            // Highlight keywords
+            setTimeout(() => {
+                highlightKeywords(editor, allYamlKeywords);
+            }, 10);
         });
         // Trigger autocomplete on typing
         editor.on("inputRead", (cm, change) => {

@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/anyword-hint.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/search/searchcursor.min.js"></script>
 
     <script>
       tailwind.config = {
@@ -32,38 +33,21 @@
           transform: rotate(360deg);
         }
       }
-      /* Force CodeMirror 6 oneDark background and text color */
-      .cm-editor.cm-one-dark {
-        background: #282c34 !important;
-        color: #abb2bf !important;
-      }
     </style>
     <style>
-      .cm-editor {
-        background-color: #1e1e1e;
-        color: white;
+      .CodeMirror {
         font-family: monospace;
-        padding: 8px;
-        border-radius: 6px;
         border: 1px solid #444;
-      }
-
-      .cm-content {
-        padding: 0.5rem;
-      }
-
-      .cm-line {
+        border-radius: 6px;
+        padding: 8px;
+        font-size: 14px;
         line-height: 1.5;
       }
-
       .cm-string {
         color: #98c379;
       }
       .cm-keyword {
         color: #c678dd;
-      }
-      .cm-variableName {
-        color: #e5c07b;
       }
       .cm-property {
         color: #56b6c2;
@@ -74,6 +58,11 @@
       .cm-comment {
         color: #5c6370;
         font-style: italic;
+      }
+      /* Highlighted keywords */
+      .cm-keyword-highlight {
+        font-weight: bold;
+        color: #4c51bf; /* Indigo 600 – Tailwind compatible */
       }
     </style>
   </head>
