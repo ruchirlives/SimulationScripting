@@ -21,7 +21,20 @@ class Policy:
 
 
 class FullCostRecovery(Policy):
-    """Full cost recovery policy."""
+    """
+    This policy calculates costs for staff based on their FTE and applies full cost recovery (FCR) rates.
+    User args include:
+    - fcrdata: List of FCR items with their costs and frequencies
+    - linemanagerrate: Rate for line management
+    - fte: Full-time equivalent for the person
+    - step: Step at which the FCR is calculated
+    The FCR data should include:
+    - item: Name of the FCR item
+    - daysperfte: Number of days per FTE for the item
+    - dayrate: Daily rate for the item
+    - frequency: Frequency of the cost (oneoff, monthly, annual)
+    - description: Description of the item
+    """
 
     def __init__(self, env: simpy.Environment, prj, **kwargs):
         super().__init__(env, prj, **kwargs)
@@ -50,17 +63,19 @@ class FullCostRecovery(Policy):
                 pass
             if frequency == "oneoff":
                 cost = cost if step == 0 else 0
-            if frequency == "monthly":
+            if frequency == "monthly":  # monthly costs are applied every month, so using the cost directly
                 pass
             if frequency == "annual":
                 cost = cost if step % 12 == 0 else 0
-            register.append({
-                "step": step, 
-                "item": itemname, 
-                "budget": cost, 
-                "type": "3. FullCostRecovery",
-                "description": f"FCR: {itemname}"
-            })
+            register.append(
+                {
+                    "step": step,
+                    "item": itemname,
+                    "budget": cost,
+                    "type": "3. FullCostRecovery",
+                    "description": f"FCR: {itemname}",
+                }
+            )
         return register
 
     def calcfcr(self, person, step: int):
@@ -82,7 +97,14 @@ class FullCostRecovery(Policy):
 
 
 class Grant(Policy):
-    """Grant funding policy."""
+    """
+    Grant funding policy.
+    This policy applies a grant amount at a specified step.
+    User args include:
+    - amount: Amount of the grant
+    - fund: Name of the grant fund
+    - step: Step at which the grant is applied
+    """
 
     def __init__(self, env: simpy.Environment, prj, **kwargs):
         super().__init__(env, prj, **kwargs)
@@ -126,7 +148,14 @@ class Rename(Policy):
 
 
 class Finance(Policy):
-    """Finance policy for project funding."""
+    """
+    Finance policy for project funding.
+    This policy handles capital received, repayments, and interest calculations.
+    User args include:
+    - term: Number of steps for repayment
+    - capital: Initial capital amount
+    - rate: Interest rate applied to the capital
+    """
 
     def __init__(self, env: simpy.Environment, prj, **kwargs):
         super().__init__(env, prj, **kwargs)
@@ -160,9 +189,17 @@ class Finance(Policy):
 
 
 class CarbonFinancing(Policy):
-    """Carbon financing policy."""
-
+    """
+    Carbon financing policy.
+        User args include:
+        - investment: Total investment amount
+        - tree_planting_cost_per_unit: Cost per tree planted
+        - carbon_credit_per_unit: Income per carbon credit
+    """
     def __init__(self, env: simpy.Environment, prj, **kwargs):
+        """
+        Initialize CarbonFinancing policy.
+        """
         super().__init__(env, prj, **kwargs)
         self.prj = prj
         self.budget = prj.budget
@@ -216,7 +253,17 @@ class CarbonFinancing(Policy):
 
 
 def get_policy_class(policy_name: str):
-    """Get policy class by name."""
+    """
+    Get policy class by name.
+    Options include:
+    - FullCostRecovery
+    - Grant
+    - Subsidy
+    - Rename
+    - Finance
+    - CarbonFinancing
+
+    """
     policy_classes = {
         "FullCostRecovery": FullCostRecovery,
         "Grant": Grant,

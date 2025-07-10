@@ -9,14 +9,21 @@ from .utils import get_current_month, printtimestamp
 
 
 class Worker:
-    """Represents a worker in the simulation."""
+    """
+    Represents a worker in the simulation.
+    Attributes:
+        position (str): Job position of the worker.
+        department (str): Department where the worker is assigned.
+        linemanagerrate (float): Rate for line management.
+        employerpensionrate (float): Employer's pension contribution rate.
+        fte_salary (float): Full-time equivalent salary.
+        fte (float): Full-time equivalent factor.
+        salary (float): Total salary based on FTE and salary.
+    """
 
     def __init__(self, **kwargs):
         self.position = kwargs.get("position", "undesignated")
-        self.name = kwargs.get("name", "staff member")
-        self.age = kwargs.get("age", 49)
         self.department = kwargs.get("department", "unspecified")
-        self.mobilephone = kwargs.get("mobilephone", "not assigned")
         self.linemanagerrate = kwargs.get("linemanagerrate", 0)
         self.employerpensionrate = kwargs.get("employerpensionrate", EMPLOYERPENSIONRATE)
         self.fte_salary = kwargs.get("salary", 0)

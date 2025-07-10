@@ -1,5 +1,4 @@
-<script> 
-  
+<script>
   // File upload handling
   document.querySelectorAll(".file-upload-area").forEach((area) => {
     const input = area.querySelector('input[type="file"]');
@@ -56,6 +55,8 @@
 
   // Restore persisted files on load
   document.addEventListener("DOMContentLoaded", () => {
+    const codemirrorEditors = {};
+    window.codemirrorEditors = codemirrorEditors; // Make it globally available
     console.log("Loading saved files from localStorage");
     ["yaml_file", "fcrdata_file", "supportdata_file"].forEach((id) => {
       try {
@@ -169,6 +170,11 @@
           const editor = document.getElementById(input.id + "_editor");
           if (editor) {
             editor.value = content;
+
+            // Update CodeMirror editor if available
+            if (window.codemirrorEditors && window.codemirrorEditors[input.id]) {
+              window.codemirrorEditors[input.id].setValue(content);
+            }
           }
           console.log(`File ${file.name} saved to localStorage for ${input.id} (${content.length} bytes)`);
         } catch (error) {
@@ -327,38 +333,30 @@
     e.preventDefault();
 
     // Build FormData with persisted files
+    // Build FormData directly from editor contents
     const formData = new FormData();
     let hasRequiredFiles = false;
 
     try {
-      // Check for main simulation file (required)
-      const mainYamlStored = localStorage.getItem("file_yaml_file");
-      if (mainYamlStored) {
-        const mainFile = JSON.parse(mainYamlStored);
-        if (mainFile && mainFile.content) {
-          console.log(`Using stored yaml_file: ${mainFile.name} (${mainFile.content.length} bytes)`);
-          formData.append("yaml_file", new File([mainFile.content], mainFile.name, { type: mainFile.type }));
-          hasRequiredFiles = true;
+      // Helper function to handle all three editors
+      function appendEditorFile(id, required = false) {
+        const editor = document.getElementById(id + "_editor");
+        const content = editor?.value?.trim();
+        if (content) {
+          const storedMeta = localStorage.getItem("file_" + id);
+          const meta = storedMeta ? JSON.parse(storedMeta) : { name: id + ".yaml", type: "text/yaml" };
+          formData.append(id, new File([content], meta.name, { type: meta.type || "text/yaml" }));
+          if (id === "yaml_file") hasRequiredFiles = true;
+        } else if (required) {
+          alert("Please enter YAML configuration in the editor.");
+          throw new Error(`Missing YAML content in ${id}_editor`);
         }
       }
 
-      // Only proceed if we have the required yaml file
-      if (!hasRequiredFiles) {
-        alert("Please upload a simulation YAML file");
-        throw new Error("Missing required simulation YAML file");
-      }
-
-      // Add optional files
-      ["fcrdata_file", "supportdata_file"].forEach((id) => {
-        const stored = localStorage.getItem("file_" + id);
-        if (stored) {
-          const f = JSON.parse(stored);
-          if (f && f.content) {
-            console.log(`Using stored ${id}: ${f.name} (${f.content.length} bytes)`);
-            formData.append(id, new File([f.content], f.name, { type: f.type }));
-          }
-        }
-      });
+      // Always append all three
+      appendEditorFile("yaml_file", true); // required
+      appendEditorFile("fcrdata_file", false); // optional
+      appendEditorFile("supportdata_file", false); // optional
 
       // Append steps
       formData.append("steps", document.getElementById("steps").value);

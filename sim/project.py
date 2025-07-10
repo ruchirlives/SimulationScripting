@@ -10,7 +10,16 @@ from .utils import printtimestamp
 
 
 class Project:
-    """Represents a project in the simulation."""
+    """
+    Represents a project in the simulation.
+    Attributes:
+        name (str): Name of the project.
+        term (int): Duration of the project in steps.
+        directcosts (list): List of direct costs associated with the project.
+        supports (list): List of support costs associated with the project.
+        portfolio (Portfolio): The portfolio to which this project belongs.
+        startstep (int): The step at which the project starts.
+    """
 
     def __init__(self, portfolio, **kwargs):
         self.kwargs = kwargs
@@ -110,12 +119,12 @@ class Project:
             for person in self.staff:
                 breakdown = person.getbreakdown(step)
                 for entry in breakdown:
-                    entry["name"] = person.name
+                    entry["position"] = person.position
                 stepregister.extend(breakdown)
                 if fcr_policy is not None:
                     fcr_entries = fcr_policy.getfcr(person, step)
                     for entry in fcr_entries:
-                        entry["name"] = person.name
+                        entry["position"] = person.position
                     stepregister.extend(fcr_entries)
             return stepregister
 

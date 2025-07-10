@@ -87,9 +87,9 @@ class Portfolio:
             cls = Project
         prj = cls(self, **kwargs)
         self.projects.append(prj)
-        staff_names = ", ".join(person.name for person in prj.staff)
+        staff_positions = ", ".join(person.position for person in prj.staff)
         print(
-            f"Project {prj.name} created with budget {prj.budget:.2f} and assigned staff {staff_names}"
+            f"Project {prj.name} created with budget {prj.budget:.2f} and assigned staff {staff_positions}"
         )
         return prj
 
