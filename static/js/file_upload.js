@@ -75,17 +75,20 @@ export function updateFileInfo(input, info) {
                 const content = event.target.result;
                 const payload = { name: file.name, size: file.size, type: file.type, content };
                 localStorage.setItem("file_" + input.id, JSON.stringify(payload));
-                const editor = document.getElementById(input.id + "_editor");
-                if (editor) {
-                    editor.value = content;
-                    if (window.codemirrorEditors && window.codemirrorEditors[input.id]) {
-                        window.codemirrorEditors[input.id].setValue(content);
-                    }
+
+                const textarea = document.getElementById(input.id + "_editor");
+                if (textarea) {
+                    textarea.value = content;
+                }
+
+                if (window.codemirrorEditors && window.codemirrorEditors[input.id]) {
+                    window.codemirrorEditors[input.id].setValue(content); // ✅ force update here
                 }
             } catch (error) {
                 console.error(`Error saving file ${file.name} to localStorage:`, error);
             }
         };
+
         reader.readAsText(file);
     } else {
         info.classList.add("hidden");

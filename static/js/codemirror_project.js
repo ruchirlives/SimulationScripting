@@ -2,11 +2,11 @@ window.addEventListener("DOMContentLoaded", () => {
     const contextualHints = {
         projects: ["term", "name", "directcosts", "supports", "portfolio", "startstep"],
         directcosts: ["item", "cost", "frequency", "description"],
-        frequency: ["monthly", "annual", "one-off"],
+        supports: ["item", "step", "description", "frequency", "units"],
+        frequency: ["monthly", "annual", "oneoff"],
         staffing: ["name", "role", "salary", "fte", "linemanagerrate", "employerpensionrate", "description"],
         policies: ["policy", "description", "frequency", "amount", "fund", "step"],
         policy: ["FullCostRecovery", "Grant", "Finance", "CarbonFinancing"],
-        FullCostRecovery: ["fcrdata", "linemanagerrate", "fte", "step"],
         Grant: ["amount", "fund", "step"],
         Finance: ["term", "capital", "rate"],
         CarbonFinancing: ["term", "capital", "rate", "investment", "tree_planting_cost_per_unit", "carbon_credit_per_unit"]
@@ -138,6 +138,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
         // Set the editor
         codemirrorEditors[textarea.getAttribute("data-target")] = editor;
+        // Apply any file-loaded YAML content to the editor (if waiting)
+        if (window.pendingCodemirrorUpdates && window.pendingCodemirrorUpdates[targetId]) {
+            const pending = window.pendingCodemirrorUpdates[targetId];
+            editor.setValue(pending);
+            delete window.pendingCodemirrorUpdates[targetId];
+        }
 
         // Live sync to textarea
         editor.on("change", () => {
