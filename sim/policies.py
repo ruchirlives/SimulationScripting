@@ -196,6 +196,7 @@ class CarbonFinancing(Policy):
         - tree_planting_cost_per_unit: Cost per tree planted
         - carbon_credit_per_unit: Income per carbon credit
     """
+
     def __init__(self, env: simpy.Environment, prj, **kwargs):
         """
         Initialize CarbonFinancing policy.

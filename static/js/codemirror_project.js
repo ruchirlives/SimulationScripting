@@ -5,10 +5,10 @@ window.addEventListener("DOMContentLoaded", () => {
         supports: ["item", "step", "description", "frequency", "units"],
 
         staffing: ["name", "role", "salary", "fte", "linemanagerrate", "employerpensionrate", "description"],
-        policies: ["policy", "description", "frequency", "amount", "fund", "step"],
+        policies: ["policy", "description", "frequency", "amount", "fund", "step", "term", "capital", "rate", "investment", "tree_planting_cost_per_unit", "carbon_credit_per_unit", "dayrate", "daysperfte"],
         policy: ["FullCostRecovery", "Grant", "Finance", "CarbonFinancing"],
-        Grant: ["amount", "fund", "step"],
         Finance: ["term", "capital", "rate"],
+        Grant: ["amount", "fund", "step"],
         CarbonFinancing: ["term", "capital", "rate", "investment", "tree_planting_cost_per_unit", "carbon_credit_per_unit"],
 
         variables: [],
